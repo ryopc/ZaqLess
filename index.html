@@ -4,7 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ZaqLess（ザクレス）- 紙とスマホで進める「ちょこっと落書き」学習</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" id="silktide-consent-manager-css" href="https://cdn.jsdelivr.net/gh/silktide/consent-manager@v2.0.0/silktide-consent-manager.css" integrity="sha384-IO1E/jCrQXyH5rwcI0SXP7OXw47JFqQNDQcKhbFvqnL2IunBxxwE2Ne5XyAmCqKs" crossorigin="anonymous">
+<style id="silktide-consent-manager-overrides">
+#stcm-wrapper {
+  --boxShadow: -5px 5px 10px 0px #00000012, 0px 0px 50px 0px #0000001a;
+  --fontFamily: Helvetica Neue, Segoe UI, Arial, sans-serif;
+  --primaryColor: #533BE2;
+  --backgroundColor: #FFFFFF;
+  --textColor: #4B494B;
+  --backdropBackgroundColor: #00000033;
+  --backdropBackgroundBlur: 0px;
+  --iconColor: #533BE2;
+  --iconBackgroundColor: #FFFFFF;
+}
+</style>
+<script src="https://cdn.jsdelivr.net/gh/silktide/consent-manager@v2.0.0/silktide-consent-manager.js" integrity="sha384-j4NIMOecmtzMWe9GJADIIe5hTlHG63aiTQ/2XorW10RNyQJg+IU+xwFVDy45wBah" crossorigin="anonymous"></script>
+<script>
+window.silktideConsentManager.init({
+  backdrop: {
+    show: true
+  },
+  icon: {
+    position: "bottomLeft"
+  },
+  prompt: {
+    position: "bottomRight"
+  },
+  consentTypes: [
+    {
+      id: "",
+      label: "必須",
+      description: "<p>これらのクッキーは、ウェブサイトが正常に機能するために必要不可欠であり、無効にすることはできません。これらは、ログインやプライバシー設定の保存などに役立ちます。</p>",
+      required: true,
+      onAccept: function() {
+        console.log('Add logic for the required 必須 consent type here');
+      }
+    },
+    {
+      id: "",
+      label: "分析",
+      description: "<p>これらのクッキーは、どのページが最も人気があるか、また訪問者がサイト内をどのように移動しているかを追跡することで、当サイトの改善に役立てています。</p>",
+      required: false,
+      scripts: [
+        {
+          url: "https://rawcdn.githack.com/ryopc/Archive/763937053e7d03a57cf824c4df5cd46bc6b8ab7e/zqls-an.js",
+          load: "async"
+        }
+      ],
+      onAccept: function() {
+        // Custom script loaded: https://rawcdn.githack.com/ryopc/Archive/763937053e7d03a57cf824c4df5cd46bc6b8ab7e/zqls-an.js
+      }
+    },
+    {
+      id: "",
+      label: "カスタマーサポート",
+      description: "<p>このクッキーは、お客様に最適なサポートを提供するために役立ちます。</p>",
+      required: false,
+      onAccept: function() {
+        console.log('Add accept logic for カスタマーサポート consent type here');
+      },
+      onReject: function() {
+        console.log('Add reject logic for カスタマーサポート consent type here');
+      }
+    }
+  ],
+  text: {
+    prompt: {
+      description: "<p>当サイトでは、ユーザー体験の向上およびアクセス状況の分析を目的として、クッキーを使用しています。</p>",
+      acceptAllButtonText: "すべて受け入れる",
+      acceptAllButtonAccessibleLabel: "すべてのCookieを受け入れる",
+      rejectNonEssentialButtonText: "重要でないものは除外する",
+      rejectNonEssentialButtonAccessibleLabel: "不要なクッキーをすべて拒否する",
+      preferencesButtonText: "設定",
+      preferencesButtonAccessibleLabel: "設定を切り替える"
+    },
+    preferences: {
+      title: "クッキーの設定をカスタマイズする",
+      description: "<p>当社はお客様のプライバシーを尊重しています。お客様は、特定の種類のクッキーを無効にするよう選択することができます。設定されたクッキーの設定は、当ウェブサイト全体に適用されます。</p>",
+      saveButtonText: "保存して閉じる",
+      saveButtonAccessibleLabel: "クッキーの設定を保存する",
+      creditLinkText: "Get this banner for free",
+      creditLinkAccessibleLabel: "Get this banner for free"
+    }
+  }
+});
+</script>
     <!-- Tailwind CSS -->
+   
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
