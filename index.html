@@ -61,11 +61,12 @@ window.silktideConsentManager.init({
       label: "カスタマーサポート",
       description: "<p>このクッキーは、お客様に最適なサポートを提供するために役立ちます。</p>",
       required: false,
-      onAccept: function() {
-        console.log('Add accept logic for カスタマーサポート consent type here');
-      },
-      onReject: function() {
-        console.log('Add reject logic for カスタマーサポート consent type here');
+  scripts: [
+        {
+          url: "https://rawcdn.githack.com/ryopc/Archive/5d656be462b880d90ebf45c5237213eb4bf30bdd/zqls-ct.js",
+          load: "async"
+        }
+      ]
       }
     }
   ],
