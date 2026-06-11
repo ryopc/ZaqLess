@@ -1,7 +1,3 @@
-申し訳ありません、先ほどはGitHub用のドキュメントとして作成してしまいました。
-
-「**あくまで公式サイト用として、もっと親しみやすく、かつ教育コンセプトをしっかり伝えるための構成**」で、もう一度英語で作成し直します。マークダウンの構成を整え、公式サイトのトップページやブランド紹介ページにそのまま貼れる形式にします。
-
 # ZaqLess: Learning, Simplified.
 
 **Stop wasting time copying problems. Start focusing on the joy of discovery.**
