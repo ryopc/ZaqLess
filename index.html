@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ZaqLess（ザクレス）- 紙とスマホで進める「ちょこっと落書き」学習</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=M+PLUS+Rounded+1c:wght@500;700;900&display=swap');
+        
+        body {
+            font-family: 'M PLUS Rounded 1c', 'Fredoka One', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        .font-logo {
+            font-family: 'Fredoka One', sans-serif;
+        }
+
+        /* アニメーション */
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        .animate-bounce-slow {
+            animation: bounce-slow 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse-active {
+            0%, 100% { transform: scale(1); border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.4); }
+            50% { transform: scale(1.03); border-color: #818cf8; box-shadow: 0 0 0 6px rgba(129, 140, 248, 0.6); }
+        }
+        .cell-active {
+            animation: pulse-active 1.2s infinite ease-in-out;
+            background-color: #e0e7ff !important;
+        }
+
+        /* スクロールバー非表示 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-indigo-50/30 text-slate-800 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <script>
+        // ピコピコシンセ音（Web Audio API）
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new Context();
+            }
+        }
+
+        function playSound(type) {
+            try {
+                if (!audioCtx) audioCtx = new AudioContext();
+                if (!audioCtx) return;
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'tap') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } else if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                    osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.2, now + 0.3);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.45);
+                } else if (type === 'incorrect') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.setValueAtTime(120, now + 0.15);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.15, now + 0.25);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'gachan') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                }
+            } catch (e) {
+                console.log("Audio play blocked/failed", e);
+            }
+        }
+    </script>
+
+    <header class="bg-white border-b-4 border-indigo-100 px-4 py-3.5 sticky top-0 z-50 shadow-sm flex justify-between items-center">
+        <div class="flex items-center gap-1.5">
+            <span class="font-logo text-2xl text-indigo-600 tracking-wider">ZaqLess</span>
+            <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">ザクレス</span>
+        </div>
+        <div class="flex gap-2">
+            <a href="#trial-section" onclick="playSound('tap')" class="text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl shadow-md transition-all active:scale-95">
+                紙とえんぴつで試す！
+            </a>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-md w-full mx-auto px-4 py-6 flex flex-col gap-6 overflow-y-auto no-scrollbar">
+
+        <section class="text-center py-2 flex flex-col items-center gap-3">
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 rounded-full text-xs font-bold mb-1 border border-amber-200">
+                <i data-lucide="pencil" class="w-3.5 h-3.5 text-amber-500"></i>
+                スマホ画面に書くのはおしまい！本物の紙に書くハイブリッド
+            </div>
+            <h2 class="text-2xl font-black text-slate-800 leading-snug">
+                問題の書き写しはゼロ！<br>
+                「半分はスマホ」でサクッと入力、<br>
+                「手元の紙」に、ちょこっと落書き！
+            </h2>
+            <p class="text-xs text-slate-500 leading-relaxed max-w-xs">
+                スマホ画面に指でちまちま書くのは、滑って書きづらいし目が疲れる！でも、ノートに問題文を一から全部きれいに書き写すのはめんどくさい！<br>
+                ZaqLessは、面倒な枠組みはスマホが用意。<strong>問題の選択、答え、半分以上の入力はスマホで簡単ピコピコ操作！</strong> 考えるための「計算過程のメモ」だけを手元の「いらない紙」に落書き感覚でちょこっと手書きする、脳に一番効く新しい勉強法です。
+            </p>
+
+            <div class="relative w-full aspect-video bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-3xl p-5 shadow-lg text-white flex flex-col justify-between overflow-hidden my-2 animate-bounce-slow">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full"></div>
+                <div class="absolute -left-10 -top-10 w-32 h-32 bg-indigo-400/20 rounded-full"></div>
+                
+                <div class="flex justify-between items-center">
+                    <span class="font-logo text-lg tracking-wider opacity-80">ZaqLess Scribble</span>
+                    <i data-lucide="sparkles" class="w-6 h-6 text-amber-300"></i>
+                </div>
+
+                <div class="text-left py-2">
+                    <p class="text-xxs text-indigo-200">スマホ × リアルな紙の最強コラボ</p>
+                    <p class="text-lg font-black tracking-wide leading-tight mt-1">
+                        チラシの裏が、最高の脳トレ広場になる！<br>「書くめんどくささ」を徹底スキップ。
+                    </p>
+                </div>
+
+                <div class="flex justify-between items-end">
+                    <div class="flex gap-1">
+                        <span class="w-2.5 h-2.5 bg-amber-400 rounded-full animate-pulse"></span>
+                        <span class="w-2.5 h-2.5 bg-emerald-400 rounded-full"></span>
+                        <span class="w-2.5 h-2.5 bg-rose-400 rounded-full"></span>
+                    </div>
+                    <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">Ver 3.1.0</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white p-5 rounded-3xl border-2 border-indigo-100 shadow-sm flex flex-col gap-3">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-1.5 text-indigo-600">
+                <i data-lucide="brain" class="w-5 h-5 text-indigo-600"></i>
+                「手元の紙にちょっと書く」が最高の理由
+            </h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                画面上のツルツルしたガラスに文字を書くのは、感覚が学校のノートと違って覚えづらい。やはり、<strong>本物の鉛筆で紙に書く（摩擦を感じる）こと</strong>が、人間の脳に最も記憶を定着させることが脳科学で分かっています。
+            </p>
+            <div class="bg-amber-50/70 border border-amber-200 p-3 rounded-2xl flex flex-col gap-2 text-xs">
+                <span class="font-bold text-amber-900 flex items-center gap-1">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-amber-600"></i>
+                    ZaqLess Paper Hybrid Method
+                </span>
+                <p class="text-slate-600 text-[11px] leading-relaxed">
+                    スマホに表示された綺麗なひっ算や問題を見ながら、手元の<strong>チラシの裏や自由帳に「くり下がりの斜め線」や「答えを出すための計算過程」だけをサササッと落書き</strong>します。<br>
+                    ノートを綺麗に清書する必要は一切なし！書きなぐった落書き用紙は終わったらポイ。これなら書くストレスはほぼゼロなのに、学習効果はバツグンです！
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-2 mt-1">
+                <div class="bg-indigo-50/50 p-2.5 rounded-xl text-center">
+                    <div class="w-7 h-7 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center mx-auto mb-1.5">
+                        <i data-lucide="copy-slash" class="w-4 h-4"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-slate-700">問題写しゼロ</span>
+                </div>
+                <div class="bg-emerald-50/50 p-2.5 rounded-xl text-center">
+                    <div class="w-7 h-7 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center mx-auto mb-1.5">
+                        <i data-lucide="file-signature" class="w-4 h-4"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-slate-700">リアルな紙に書く</span>
+                </div>
+                <div class="bg-rose-50/50 p-2.5 rounded-xl text-center">
+                    <div class="w-7 h-7 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center mx-auto mb-1.5">
+                        <i data-lucide="smile" class="w-4 h-4"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-slate-700">ラクに頭に入る</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-gradient-to-b from-indigo-900 to-slate-900 text-white p-6 rounded-3xl shadow-lg flex flex-col gap-4 relative overflow-hidden border-2 border-indigo-500/30">
+            <div class="absolute right-0 top-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl"></div>
+            
+            <div class="flex items-center gap-2">
+                <span class="bg-rose-500 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">最新レッスン</span>
+                <span class="text-[10px] text-indigo-300 font-bold">ZaqLess × Gemini API</span>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+                <h3 class="text-base font-black flex items-center gap-2 text-indigo-200">
+                    <i data-lucide="video-off" class="w-5 h-5 text-rose-400"></i>
+                    飽きやすい「ただ見る授業動画」は廃止！
+                </h3>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    ぼーっと見ているだけで眠くなる、わからない時に質問もできない。そんな一方通行の「授業動画」をZaqLessは完全に廃止しました。
+                </p>
+            </div>
+
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col gap-3 relative">
+                <div class="flex items-center gap-2 border-b border-white/10 pb-2">
+                    <div class="w-2.5 h-2.5 bg-rose-500 rounded-full"></div>
+                    <span class="text-[10px] font-bold text-indigo-300 flex items-center gap-1">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+                        Geminiが君の「紙の落書きステップ」を応援！
+                    </span>
+                </div>
+
+                <!-- 仮想チャット風プレゼンテーション -->
+                <div class="flex flex-col gap-2.5 text-[11px]">
+                    <div class="flex gap-2 items-start">
+                        <div class="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center font-bold text-[9px] text-white">僕</div>
+                        <div class="bg-slate-800 p-2 rounded-xl rounded-tl-none max-w-[80%] text-slate-200">
+                            「手元の紙に、十の位の3を消して『2』、一の位の上に『10』って落書きメモしたよ！」
+                        </div>
+                    </div>
+                    <div class="flex gap-2 items-start justify-end">
+                        <div class="bg-indigo-600/30 border border-indigo-500/50 p-2 rounded-xl rounded-tr-none max-w-[80%] text-indigo-100">
+                            <span class="font-bold text-amber-300 flex items-center gap-0.5 text-[10px]">
+                                <i data-lucide="sparkles" class="w-3 h-3"></i> Gemini 先生
+                            </span>
+                            「お見事！本物の紙に書くと一瞬で覚えられるよね！十の位から『10』を借りる準備が完璧に書けたから、次の一の位の引き算はどうかな？紙のメモをヒントに解いてみて！」
+                        </div>
+                        <div class="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-xs">🤖</div>
+                    </div>
+                </div>
+
+                <!-- API利用のお約束に関するやさしい案内カード -->
+                <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-[10px] text-slate-300 leading-relaxed flex flex-col gap-1.5">
+                    <span class="font-bold text-amber-300 flex items-center gap-1">
+                        <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
+                        AIを使うための「やさしいお約束」
+                    </span>
+                    <p>
+                        AIによる最高の1対1サポートをみんなに届けるため、本機能では<strong>「保護者様ご自身のGemini API無料枠」</strong>をセットして遊ぶ仕組みを採用しています。
+                    </p>
+                    <p class="text-slate-400">
+                        運営がコストを全て負担するとサービスがパンクしてしまいますが、Gemini APIの公式無料ティアを活用すれば<strong>実質タダ（ほとんどの機能が完全無料）</strong>で動き続けます！APIキーの発行・設定にはほんの少しだけITの知識が必要ですが、画面を見ながら誰でもできる<strong>「保護者専用のやさしい設定サポートガイド」</strong>をご用意しているほか、<strong>「どうしても登録方法がわからない…」という場合は、人間のサポートスタッフが個別チャットで優しく丁寧にお手伝い</strong>しますので、初めての方でも安心して登録いただけます。
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2 text-xxs text-slate-300">
+                <div class="flex items-start gap-1.5">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5"></i>
+                    <span><strong>リアルな落書きプロセスを理解：</strong> どこまで考えて、どう紙に書いたかをAIがステップごとに優しく問いかけ、引き出します。</span>
+                </div>
+                <div class="flex items-start gap-1.5">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5"></i>
+                    <span><strong>1対1のインタラクティブ指導：</strong> 「動画を見る」受動的な勉強から、「紙に書きながらAIとおしゃべりする」能動的な勉強へ。</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 専用機不要・無料・親のダッシュボード紹介セクション -->
+        <section class="bg-white p-5 rounded-3xl border-2 border-indigo-100 shadow-sm flex flex-col gap-4">
+            <div class="flex items-center gap-2 border-b border-indigo-50 pb-2.5">
+                <div class="p-1.5 bg-indigo-100 text-indigo-600 rounded-xl">
+                    <i data-lucide="shield-check" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-800 leading-tight">家計にも安心の「やさしい」システム</h3>
+                    <p class="text-[10px] text-slate-400">専用機を売りつけたり、高額な課金はありません</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3.5">
+                <!-- 専用端末不要カード -->
+                <div class="flex gap-3 items-start bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                    <div class="p-2 bg-indigo-50 text-indigo-600 rounded-xl shrink-0 mt-0.5">
+                        <i data-lucide="monitor-smartphone" class="w-5 h-5"></i>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-xs font-bold text-slate-800">専用タブレットは買いません！</span>
+                        <p class="text-xxs text-slate-500 leading-relaxed">
+                            「専用タブレット代〇万円」のような負担は一切ナシ。手持ちのスマートフォンはもちろん、<strong>自分好みのお気に入りのパソコン、iPad、タブレット</strong>など、今あるお気に入りの環境でそのままご利用いただけます！
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 機能全体が無料カード -->
+                <div class="flex gap-3 items-start bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                    <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl shrink-0 mt-0.5">
+                        <i data-lucide="gift" class="w-5 h-5"></i>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs font-bold text-slate-800">基本システムはずっと無料！</span>
+                            <span class="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded font-bold">安心安全</span>
+                        </div>
+                        <p class="text-xxs text-slate-500 leading-relaxed">
+                            ひっ算サポート、漢字がっちゃんパズル、各種ドリルなどの主要システムは<strong>いつでも制限なく無料</strong>。最先端のAI会話サポートも、ご自身の無料枠APIキーを一度セットするだけで一切の追加請求なしで使い続けられます。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 親のダッシュボードカード -->
+                <div class="flex gap-3 items-start bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                    <div class="p-2 bg-rose-50 text-rose-600 rounded-xl shrink-0 mt-0.5">
+                        <i data-lucide="heart" class="w-5 h-5"></i>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-xs font-bold text-slate-800">「親のダッシュボード」で見守り</span>
+                        <p class="text-xxs text-slate-500 leading-relaxed">
+                            「今日どれくらい落書き勉強したかな？」「どの辺で手が止まっているかな？」を、お父さん・お母さんのスマホから一目でそっと見守れるダッシュボードを用意。口うるさく「勉強した？」と聞く必要はありません！
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="flex flex-col gap-4">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Product Lineup</h3>
+
+            <!-- 算数: ZaqLess Math -->
+            <div class="bg-white border-2 border-slate-100 rounded-3xl p-5 shadow-sm flex flex-col gap-3">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="text-[10px] font-black text-emerald-600 tracking-wider">ザクレス・算数</div>
+                        <h4 class="text-lg font-black text-slate-800 font-logo">ZaqLess Math</h4>
+                    </div>
+                    <div class="p-2 bg-emerald-50 text-emerald-600 rounded-2xl">
+                        <i data-lucide="plus-minus" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    問題やひっ算の箱（枠）はスマホにきれいに自動セット。子どもは手元の自由帳やいらない紙に、くり下がりや繰り上がりの「斜め線」や「小さく書く途中計算」だけを思いっきり落書きして答えを出します。
+                </p>
+                <div class="bg-slate-50 p-3 rounded-2xl flex flex-col gap-1.5 text-xxs font-bold text-slate-700">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3.5 h-3.5 bg-emerald-400 rounded-full flex items-center justify-center text-[8px] text-white">✓</span>
+                        ひっ算の枠を書き写す「めんどくさい時間」を完全スキップ！
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3.5 h-3.5 bg-emerald-400 rounded-full flex items-center justify-center text-[8px] text-white">✓</span>
+                        手元のリアルの紙に「ササッ」と途中経過をラフに手書き！
+                    </div>
+                </div>
+            </div>
+
+            <!-- 国語: ZaqLess Words -->
+            <div class="bg-white border-2 border-slate-100 rounded-3xl p-5 shadow-sm flex flex-col gap-3">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="text-[10px] font-black text-rose-600 tracking-wider">ザクレス・国語</div>
+                        <h4 class="text-lg font-black text-slate-800 font-logo">ZaqLess Words</h4>
+                    </div>
+                    <div class="p-2 bg-rose-50 text-rose-600 rounded-2xl">
+                        <i data-lucide="book-open" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    漢字のへんとつくりをパズルで合体させ、言葉のブロックを並び替えるなどのゲームの後に、一番大切な「書き順」や「トメ・ハネ」だけを手元の紙にちょこっと落書き！
+                </p>
+                <div class="bg-slate-50 p-3 rounded-2xl flex flex-col gap-1.5 text-xxs font-bold text-slate-700">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3.5 h-3.5 bg-rose-400 rounded-full flex items-center justify-center text-[8px] text-white">✓</span>
+                        パズルで脳が「解きたい！」と思った瞬間に紙に書くから定着率抜群！
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3.5 h-3.5 bg-rose-400 rounded-full flex items-center justify-center text-[8px] text-white">✓</span>
+                        ただの書き写し作業ではない、能動的な落書き漢字学習！
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="trial-section" class="bg-slate-900 text-white rounded-3xl p-5 shadow-xl flex flex-col gap-4 relative overflow-hidden">
+            <div class="absolute -right-8 -top-8 w-24 h-24 bg-indigo-500/20 rounded-full"></div>
+            
+            <div>
+                <span class="text-[10px] bg-indigo-600 text-indigo-100 px-2.5 py-1 rounded-full font-bold">手元に「紙」と「えんぴつ」を用意してね！</span>
+                <h3 class="text-lg font-black mt-2">紙×スマホの「落書き学習」を体験！</h3>
+                <p class="text-xxs text-slate-400">手元にあるチラシの裏やいらない紙を用意して、ためしてみてね</p>
+            </div>
+
+            <!-- タブ切り替え（算数ミニゲーム or 国語ミニゲーム） -->
+            <div class="bg-white/10 p-1 rounded-xl grid grid-cols-2 gap-1 text-center text-xs font-bold z-10">
+                <button id="tab-math-btn" onclick="switchDemoTab('math')" class="py-1.5 rounded-lg transition-all bg-white text-slate-900">
+                    🧮 算数: 紙に書くくり下がり
+                </button>
+                <button id="tab-words-btn" onclick="switchDemoTab('words')" class="py-1.5 rounded-lg transition-all text-white hover:bg-white/5">
+                    ✍️ 国語: 漢字がっちゃんパズル
+                </button>
+            </div>
+
+            <!-- 算数落書きデモ -->
+            <div id="demo-math-content" class="flex flex-col gap-3 py-1">
+                <div class="text-center text-xxs text-amber-300 font-bold bg-amber-500/10 py-1.5 px-2 rounded-lg leading-relaxed">
+                    【Q】手元の紙に、十の位の「3」を斜め線で消して上に「2」とメモし、一の位の上に「10」と落書きで書いてみよう！
+                </div>
+                
+                <!-- 紙への落書きイメージをサポートするアニメーションガイドボード -->
+                <div class="relative w-full aspect-square max-w-[240px] mx-auto bg-slate-800 rounded-2xl border border-white/10 overflow-hidden flex flex-col items-center justify-center p-4">
+                    
+                    <!-- 背景のひっ算シート -->
+                    <div class="flex flex-col items-end gap-1 font-mono text-xl font-bold text-white select-none relative z-10">
+                        <!-- くり下がり補助ガイド（紙に書いてほしいメモをお手本としてスマホがアニメーションガイド） -->
+                        <div class="flex gap-2 text-xs text-amber-400 h-5">
+                            <span class="w-8 text-center"></span>
+                            <span id="math-guide-carry" class="w-8 text-center text-[10px] bg-amber-500/20 border border-amber-500/40 rounded transition-all duration-700 opacity-0 transform translate-y-2">10</span>
+                            <span class="w-8 text-center"></span>
+                        </div>
+                        <!-- ひっ算: 3 2 - 1 5 -->
+                        <div class="flex gap-2">
+                            <span class="w-8 text-center text-slate-500"></span>
+                            <div class="relative w-8 h-8 flex items-center justify-center">
+                                <span id="math-num-3" class="transition-all duration-500">3</span>
+                                <!-- 斜め線のアニメーション表現 -->
+                                <div id="math-num-3-slash" class="absolute w-full h-[2px] bg-rose-500 rotate-45 transition-all duration-500 opacity-0 scale-x-0"></div>
+                                <span id="math-num-3-new" class="absolute -top-3 right-0 text-[10px] text-amber-400 font-bold transition-all duration-500 opacity-0">2</span>
+                            </div>
+                            <span class="w-8 text-center">2</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="w-8 text-center">－</span>
+                            <span class="w-8 text-center">1</span>
+                            <span class="w-8 text-center">5</span>
+                        </div>
+                        <div class="w-24 h-[2px] bg-slate-400"></div>
+                        <!-- 答え: 1 7 -->
+                        <div class="flex gap-2 items-center">
+                            <span class="w-8 text-center text-slate-400"></span>
+                            <span class="w-8 text-center">1</span>
+                            <span id="math-question-mark" class="w-8 h-8 flex items-center justify-center bg-indigo-500 text-white rounded cell-active text-sm">？</span>
+                        </div>
+                    </div>
+
+                    <!-- アニメーション再生・ガイドボタン -->
+                    <button id="math-guide-btn" onclick="playMathGuide()" class="absolute bottom-2 left-2 z-30 p-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-[9px] font-bold flex items-center gap-1.5 transition-all shadow-md">
+                        <i data-lucide="play" class="w-3.5 h-3.5 text-amber-300"></i>
+                        <span>紙への書き方お手本</span>
+                    </button>
+                    
+                    <div class="absolute top-2 right-2 z-10 text-[9px] bg-emerald-600/60 px-2 py-0.5 rounded-full flex items-center gap-1 text-emerald-100">
+                        <i data-lucide="info" class="w-3 h-3 text-white"></i>
+                        スマホがお手本を示すよ
+                    </div>
+                </div>
+
+                <div class="text-center text-xxs text-slate-400">
+                    手元の紙に「2」と「10」のメモ落書きが書けたら、一の位の計算（12－5）の答えを選ぼう！
+                </div>
+
+                <!-- 選択肢ボタン -->
+                <div class="grid grid-cols-4 gap-1.5 z-10">
+                    <button onclick="answerMathDemo('5')" class="py-2.5 bg-white/10 active:bg-white/20 rounded-xl font-bold text-xs transition-transform active:scale-95">5</button>
+                    <button onclick="answerMathDemo('6')" class="py-2.5 bg-white/10 active:bg-white/20 rounded-xl font-bold text-xs transition-transform active:scale-95">6</button>
+                    <button onclick="answerMathDemo('7')" class="py-2.5 bg-white/10 active:bg-white/20 rounded-xl font-bold text-xs transition-transform active:scale-95">7</button>
+                    <button onclick="answerMathDemo('8')" class="py-2.5 bg-white/10 active:bg-white/20 rounded-xl font-bold text-xs transition-transform active:scale-95">8</button>
+                </div>
+            </div>
+
+            <!-- 国語落書きデモ -->
+            <div id="demo-words-content" class="hidden flex flex-col gap-3 py-1">
+                <div class="text-center text-xxs text-amber-300 font-bold bg-amber-500/10 py-1.5 px-2 rounded-lg">
+                    【Q】「きへん（木）」と「白」を合体させてできた漢字を、手元の紙に3回だけ「落書き」してササッと書いてみよう！
+                </div>
+                
+                <div class="flex justify-center items-center gap-2 z-10 bg-white/5 p-3 rounded-2xl border border-white/10">
+                    <!-- へん -->
+                    <div class="w-10 h-10 flex flex-col items-center justify-center border-2 border-indigo-400 bg-indigo-500/20 rounded-xl text-white">
+                        <span class="text-lg font-black">木</span>
+                    </div>
+                    <span class="text-xs text-slate-400">＋</span>
+                    <!-- つくり（選択ボタン） -->
+                    <button id="word-tsukuri-btn" onclick="selectTsukuriDemo('白', '柏')" class="w-10 h-10 flex flex-col items-center justify-center border border-dashed border-amber-400/50 hover:bg-amber-500/10 active:scale-95 transition-all text-amber-400 rounded-xl">
+                        <span class="text-lg font-black">白</span>
+                        <span class="text-[7px] text-amber-300 animate-pulse">タップ！</span>
+                    </button>
+                    <span class="text-xs text-slate-400">＝</span>
+                    <!-- 結果 -->
+                    <div id="word-result" class="w-10 h-10 flex items-center justify-center bg-slate-800 border border-white/10 text-slate-500 rounded-xl text-lg font-black">
+                        ？
+                    </div>
+                </div>
+
+                <!-- 手元に書くための書き順お手本ガイドボード -->
+                <div id="word-animation-board" class="relative w-full aspect-video bg-slate-800 rounded-2xl border border-white/10 overflow-hidden flex flex-col items-center justify-center p-3 opacity-50">
+                    
+                    <!-- うっすら出る「柏」のお手本 -->
+                    <div id="word-guide-char" class="text-6xl font-black text-slate-700/20 select-none pointer-events-none transition-all duration-300">
+                        柏
+                    </div>
+
+                    <!-- アニメーション表示用オーバーレイガイド -->
+                    <div id="word-guide-tip" class="absolute bottom-2 text-xxs text-rose-300 font-bold hidden flex items-center gap-1">
+                        <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
+                        <span>上の「白」を合体させると、書き方ガイドが始まるよ！</span>
+                    </div>
+                </div>
+
+                <!-- 紙に書けたよ確認ボタン -->
+                <button id="word-finished-btn" disabled onclick="completeWordDemo()" class="py-3 bg-slate-700 text-slate-400 font-bold text-xs rounded-xl transition-all cursor-not-allowed">
+                    📝 紙に「柏」をちょこっと書いたよ！
+                </button>
+
+                <p id="words-feedback" class="text-center text-xxs text-slate-400 h-4">上の「白」をタップして漢字を合体させてね</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-6 px-4 text-center mt-6">
+        <p class="font-logo text-lg text-indigo-600 tracking-wider">ZaqLess</p>
+        <p class="text-[10px] text-slate-400 mt-1">© 2026 ZaqLess Learning. All rights reserved.</p>
+        <p class="text-[9px] text-slate-300 mt-1 leading-relaxed">
+            ※ ZaqLessは「書くのがしんどい」を「紙×スマホのハイブリッド落書き学習」の力でワクワクに変える、思考ファーストな次世代型学習プラットフォームです。
+        </p>
+    </footer>
+
+    <script>
+        window.onload = function() {
+            lucide.createIcons();
+        };
+
+        // タブ切り替え
+        function switchDemoTab(tab) {
+            playSound('tap');
+            const mathTabBtn = document.getElementById('tab-math-btn');
+            const wordsTabBtn = document.getElementById('tab-words-btn');
+            const mathContent = document.getElementById('demo-math-content');
+            const wordsContent = document.getElementById('demo-words-content');
+
+            if (tab === 'math') {
+                mathTabBtn.className = "py-1.5 rounded-lg transition-all bg-white text-slate-900";
+                wordsTabBtn.className = "py-1.5 rounded-lg transition-all text-white hover:bg-white/5";
+                mathContent.classList.remove('hidden');
+                wordsContent.classList.add('hidden');
+            } else {
+                wordsTabBtn.className = "py-1.5 rounded-lg transition-all bg-white text-slate-900";
+                mathTabBtn.className = "py-1.5 rounded-lg transition-all text-white hover:bg-white/5";
+                mathContent.classList.add('hidden');
+                wordsContent.classList.remove('hidden');
+            }
+        }
+
+        // 算数デモ: 紙への書き方お手本アニメーション
+        let guideRunning = false;
+        function playMathGuide() {
+            if (guideRunning) return;
+            guideRunning = true;
+            playSound('tap');
+
+            const num3 = document.getElementById('math-num-3');
+            const num3Slash = document.getElementById('math-num-3-slash');
+            const num3New = document.getElementById('math-num-3-new');
+            const carry10 = document.getElementById('math-guide-carry');
+            const guideBtn = document.getElementById('math-guide-btn');
+
+            guideBtn.disabled = true;
+            guideBtn.classList.add('opacity-50');
+
+            // 1. 3を斜め線で消すアニメーション
+            num3Slash.className = "absolute w-full h-[2px] bg-rose-500 rotate-45 transition-all duration-500 opacity-100 scale-x-100";
+            num3.className = "text-slate-500 scale-95 transition-all duration-500";
+
+            // 2. 1秒後に上に「2」とメモを出現させる
+            setTimeout(() => {
+                num3New.className = "absolute -top-3 right-0 text-[10px] text-amber-400 font-bold transition-all duration-500 opacity-100 scale-110";
+                playSound('tap');
+            }, 800);
+
+            // 3. さらに0.8秒後に一の位の上に「10」を借りてくるメモを出す
+            setTimeout(() => {
+                carry10.className = "w-8 text-center text-[10px] bg-amber-500/20 border border-amber-500/40 rounded transition-all duration-500 opacity-100 transform translate-y-0 scale-110";
+                playSound('gachan');
+            }, 1600);
+
+            // 4. ガイド完了後、ボタンを戻す
+            setTimeout(() => {
+                guideBtn.disabled = false;
+                guideBtn.classList.remove('opacity-50');
+                guideRunning = false;
+            }, 2500);
+        }
+
+        // 算数デモ判定 (アラートに代わるモーダル等も検討できますが、今回はシンプルな親しみやすいメッセージ表示に変更)
+        function answerMathDemo(num) {
+            const resultBox = document.getElementById('math-question-mark');
+            if (num === '7') {
+                playSound('correct');
+                resultBox.innerText = '7';
+                resultBox.className = "w-8 h-8 flex items-center justify-center bg-emerald-500 text-white rounded text-sm font-bold animate-pulse";
+                
+                // ポップアップメッセージの表示
+                setTimeout(() => {
+                    alert('大正解！すごーーい！👏\n手元の紙に「2」と「10」はうまく落書きできたかな？\n\nスマホをノート代わりに使わずに、いらない紙にちょこっと書くだけで、脳にばっちり計算ルールが染み込みます！この調子で次のステップへ進もう！');
+                }, 100);
+            } else {
+                playSound('incorrect');
+                resultBox.classList.add('bg-rose-600');
+                setTimeout(() => {
+                    resultBox.classList.remove('bg-rose-600');
+                }, 400);
+            }
+        }
+
+        // 国語デモ判定
+        function selectTsukuriDemo(tsukuri, kanji) {
+            const resultBox = document.getElementById('word-result');
+            const feedback = document.getElementById('words-feedback');
+            const guideChar = document.getElementById('word-guide-char');
+            const board = document.getElementById('word-animation-board');
+            const finishedBtn = document.getElementById('word-finished-btn');
+
+            playSound('gachan');
+            setTimeout(() => playSound('correct'), 150);
+
+            resultBox.innerText = kanji;
+            resultBox.className = "w-10 h-10 flex items-center justify-center bg-emerald-500 text-white rounded-xl text-lg font-black shadow-lg shadow-emerald-500/30";
+            
+            // 下のなぞり書きガイドボードを明るくし、お手本「柏」を浮き出させる
+            board.classList.remove('opacity-50');
+            guideChar.classList.remove('text-slate-700/20');
+            guideChar.classList.add('text-rose-400/40', 'scale-110', 'animate-pulse');
+
+            // 紙に書く確認ボタンをアクティブ化
+            finishedBtn.removeAttribute('disabled');
+            finishedBtn.className = "py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs rounded-xl transition-all shadow-md cursor-pointer";
+
+            feedback.innerText = `がっちゃんこ大成功！「${kanji}（かしわ）」ができたよ！さあ、手元の紙にお手本を見ながらささっと3回書いてみよう！`;
+            feedback.className = "text-center text-xxs text-emerald-400 font-bold";
+        }
+
+        // 国語デモ：手元の紙に書いたよ確認アクション
+        function completeWordDemo() {
+            playSound('correct');
+            alert('素晴らしい！本物の紙に「柏」の文字がしっかり落書きできたね！✍️✨\n手で紙のザラザラや鉛筆の重さを感じながら書くことで、脳が一気に「あ、この漢字、覚えたぞ！」と反応します。\nZaqLessなら、面倒な書き写しゼロで漢字がどんどん得意になるよ！');
+        }
+    </script>
+</body>
+</html>
