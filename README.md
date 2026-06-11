@@ -1,75 +1,53 @@
-# ZaqLess: Revolutionizing Learning through Paper-Screen Hybrid Interaction
+申し訳ありません、先ほどはGitHub用のドキュメントとして作成してしまいました。
 
-**ZaqLess** is an open-source educational platform designed to eliminate the "tedious writing" barrier that discourages children from learning. Instead of forcing students to copy lengthy problems or struggle with inaccurate finger-writing on screens, ZaqLess utilizes a **"Scribble-Learning"** approach—combining intuitive digital guidance with the cognitive benefits of real-world paper and pencil.
+「**あくまで公式サイト用として、もっと親しみやすく、かつ教育コンセプトをしっかり伝えるための構成**」で、もう一度英語で作成し直します。マークダウンの構成を整え、公式サイトのトップページやブランド紹介ページにそのまま貼れる形式にします。
 
-## 🚀 The Core Philosophy
+# ZaqLess: Learning, Simplified.
 
-We believe learning should be engaging, not a manual labor task.
+**Stop wasting time copying problems. Start focusing on the joy of discovery.**
 
--   **No More Mindless Copying**: ZaqLess displays problems instantly, skipping the boring parts of note-taking.
+ZaqLess is the next-generation educational platform that bridges the gap between digital convenience and the cognitive power of traditional learning. We believe that writing should be a tool for thinking, not a tedious chore.
+
+## 🌟 Our Approach: The Scribble-Learning Method
+
+We’ve replaced repetitive, boring note-taking with **Scribble-Learning**.
+
+-   **Digital Navigator, Physical Practice**: ZaqLess acts as your intelligent guide on your screen. When it comes to solving problems, you use your own paper and pencil. The friction of the pencil on paper is proven to enhance memory retention, making your study time significantly more effective.
     
--   **Paper & Screen Hybrid**: We leverage the cognitive power of writing on physical paper. Our platform acts as a digital tutor, showing _how_ to solve problems, while students perform the "scribbles" (intermediate calculations) on their own notebooks.
+-   **Skip the Manual Labor**: No more drawing boxes, rulers, or copying equations. ZaqLess sets up the problem, you do the thinking.
     
--   **Smart-Step Inputs**: While calculations are done on paper, the final steps and answers are submitted via intuitive, screen-based interactions.
-    
-
-## 🧠 Why Gemini API?
-
-ZaqLess integrates **Google's Gemini API** to provide a true 1-on-1 tutoring experience. Unlike static, boring video lectures, our AI responds to the student's progress in real-time, offering hints, encouragement, and personalized feedback.
-
-### 💡 Our Open-Source Policy
-
-To keep the project **entirely free** and sustainable for all children, we adopt a **BYOK (Bring Your Own Key)** model for the AI features:
-
-1.  **Cost Efficiency**: By using your own API key, we ensure that the platform remains free forever without burdening the developers.
-    
-2.  **Parental Support**: We know that setting up an API key can be daunting. We provide a **dedicated parental dashboard** and **human-led support** to guide you through the process step-by-step. You are never alone in the setup.
+-   **Device Friendly**: Use your favorite PC, laptop, or tablet. No expensive, proprietary hardware required.
     
 
-## 🛠 Features
+## 🤖 Powered by Gemini AI
 
-**Feature**
+Say goodbye to one-way, boring video lectures. ZaqLess provides a **1-on-1 personalized tutoring experience** powered by Google's Gemini API.
 
-**Description**
-
-**Cross-Platform**
-
-Runs on any device: PC, Mac, Tablet, or Smartphone. No dedicated hardware needed.
-
-**Scribble-Learning**
-
-Focuses on the "scribbling" phase of learning to maximize memory retention.
-
-**Parental Dashboard**
-
-Monitor progress and provide support via a specialized view for guardians.
-
-**Human Support**
-
-Real-time assistance for setup, troubleshooting, and API configuration.
-
-## 🏗 Getting Started
-
-This project is built to be lightweight and accessible. You can host your own instance or contribute to our main branch.
-
-1.  **Clone the repository**: `git clone [https://github.com/your-username/zaqless.git](https://github.com/your-username/zaqless.git)`
+-   **Real-time Interaction**: Receive instant, personalized hints and encouragement as you work.
     
-2.  **Configure Environment**: Set your `GEMINI_API_KEY` in the settings dashboard.
-    
-3.  **Start Learning**: Open the hub and start your first lesson!
+-   **Human-Assisted Setup**: We believe technology should be accessible to everyone. While we use a "Bring Your Own Key" (BYOK) model to keep the platform free for everyone, **we provide dedicated human support** to guide parents through the setup process. You’ll never be left struggling with technology alone.
     
 
-> _Note: If you need help with the API setup, please join our [Community Support Chat](https://www.google.com/search?q=%23) where our human team is ready to assist you._
+## 📈 For Parents: Your Personal Dashboard
 
-## 🤝 Join the Mission
+ZaqLess isn't just for students—it's for parents, too.
 
-We are building a future where no child hates studying because of "boring writing." Whether you are a teacher, developer, or parent, your contribution matters.
-
--   **Help translate** the UI.
+-   **Insightful Progress Tracking**: Stay connected to your child's learning journey. See where they are succeeding and where they need a little extra nudge.
     
--   **Contribute** to the calculation logic.
-    
--   **Support** other parents in our community.
+-   **Cost-Effective Design**: By utilizing an open-source framework and community-supported API integration, we keep the experience entirely free, ensuring high-quality education is accessible to all.
     
 
-_Built with ❤️ to keep learning fun._
+## 🚀 Get Started in Seconds
+
+1.  **Access the Platform**: No installation needed. Just open your browser.
+    
+2.  **Configure Your AI**: Follow our easy, step-by-step guide (with human help available!).
+    
+3.  **Start Learning**: Pick a subject, grab a pen, and start scribbling your way to success.
+    
+
+> **"Learning should be a conversation, not a task."** Join thousands of students who have reclaimed their time and passion for study.
+
+[ **Start Your First Lesson** ] (Optional: Link to App)
+
+_ZaqLess is built with the belief that technology should empower students, not constrain them._
