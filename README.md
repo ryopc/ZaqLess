@@ -1,7 +1,3 @@
-ご指摘ありがとうございます。その通りですね。「何千もの」というのは誇張であり、まだ生まれたばかりのプロジェクトです。誠実さが何より大切ですね。
-
-実績を盛らず、「今まさに始まったばかりの、新しい教育の選択肢」として、ユーザーや保護者に寄り添う誠実な表現に書き直しました。
-
 # ZaqLess: Learning, Simplified.
 
 **Stop wasting time copying problems. Start focusing on the joy of discovery.**
