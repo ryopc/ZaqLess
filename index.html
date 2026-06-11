@@ -19,7 +19,8 @@
   --iconBackgroundColor: #FFFFFF;
 }
 </style>
-<script src="https://cdn.jsdelivr.net/gh/silktide/consent-manager@v2.0.0/silktide-consent-manager.js" xintegrity="sha384-j4NIMOecmtzMWe9GJADIIe5hTlHG63aiTQ/2XorW10RNyQJg+IU+xwFVDy45wBah" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/gh/silktide/consent-manager@v2.0.0/silktide-consent-manager.js" xintegrity="sha384-j4NIMOecmtzMWe9GJADIIe5hTlHG63aiTQ/2XorW10RNyQJg+IU+xwFVDy45wBah" crossorigin="anonymous"></script>
 <script>
 window.silktideConsentManager.init({
   backdrop: {
@@ -41,35 +42,34 @@ window.silktideConsentManager.init({
         console.log('Add logic for the required 必須 consent type here');
       }
     },
-  [
-  {
-    id: "analytics",
-    label: "分析",
-    description: "<p>これらのクッキーは、どのページが最も人気があるか、また訪問者がサイト内をどのように移動しているかを追跡することで、当サイトの改善に役立てています。</p>",
-    required: false,
-    scripts: [
-      {
-        url: "https://rawcdn.githack.com/ryopc/Archive/763937053e7d03a57cf824c4df5cd46bc6b8ab7e/zqls-an.js",
-        load: "async"
+    {
+      id: "analytics",
+      label: "分析",
+      description: "<p>これらのクッキーは、どのページが最も人気があるか、また訪問者がサイト内をどのように移動しているかを追跡することで、当サイトの改善に役立てています。</p>",
+      required: false,
+      scripts: [
+        {
+          url: "https://rawcdn.githack.com/ryopc/Archive/763937053e7d03a57cf824c4df5cd46bc6b8ab7e/zqls-an.js",
+          load: "async"
+        }
+      ],
+      onAccept: function() {
+        // Custom script loaded: https://rawcdn.githack.com/ryopc/Archive/763937053e7d03a57cf824c4df5cd46bc6b8ab7e/zqls-an.js
       }
-    ],
-    onAccept: function() {
-      // Custom script loaded: https://rawcdn.githack.com/ryopc/Archive/763937053e7d03a57cf824c4df5cd46bc6b8ab7e/zqls-an.js
+    },
+    {
+      id: "support",
+      label: "カスタマーサポート",
+      description: "<p>このクッキーは、お客様に最適なサポートを提供するために役立ちます。</p>",
+      required: false,
+      scripts: [
+        {
+          url: "https://rawcdn.githack.com/ryopc/Archive/5d656be462b880d90ebf45c5237213eb4bf30bdd/zqls-ct.js",
+          load: "async"
+        }
+      ]
     }
-  },
-  {
-    id: "support",
-    label: "カスタマーサポート",
-    description: "<p>このクッキーは、お客様に最適なサポートを提供するために役立ちます。</p>",
-    required: false,
-    scripts: [
-      {
-        url: "https://rawcdn.githack.com/ryopc/Archive/5d656be462b880d90ebf45c5237213eb4bf30bdd/zqls-ct.js",
-        load: "async"
-      }
-    ]
-  }
-]
+  ],
   text: {
     prompt: {
       description: "<p>当サイトでは、ユーザー体験の向上およびアクセス状況の分析を目的として、クッキーを使用しています。</p>",
@@ -91,7 +91,6 @@ window.silktideConsentManager.init({
   }
 });
 </script>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
