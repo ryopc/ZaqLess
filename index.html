@@ -19,7 +19,7 @@
   --iconBackgroundColor: #FFFFFF;
 }
 </style>
-<script src="https://cdn.jsdelivr.net/gh/silktide/consent-manager@v2.0.0/silktide-consent-manager.js" integrity="sha384-j4NIMOecmtzMWe9GJADIIe5hTlHG63aiTQ/2XorW10RNyQJg+IU+xwFVDy45wBah" crossorigin="anonymous"></script>
+<script src="https://jsdelivr.net" integrity="sha384-j4NIMOecmtzMWe9GJADIIe5hTlHG63aiTQ/2XorW10RNyQJg+IU+xwFVDy45wBah" crossorigin="anonymous"></script>
 <script>
 window.silktideConsentManager.init({
   backdrop: {
@@ -33,7 +33,7 @@ window.silktideConsentManager.init({
   },
   consentTypes: [
     {
-      id: "",
+      id: "necessary", // 👈 ここに名前を入れたので「必須」になります
       label: "必須",
       description: "<p>これらのクッキーは、ウェブサイトが正常に機能するために必要不可欠であり、無効にすることはできません。これらは、ログインやプライバシー設定の保存などに役立ちます。</p>",
       required: true,
@@ -42,22 +42,22 @@ window.silktideConsentManager.init({
       }
     },
     {
-      id: "",
+      id: "analytics", // 👈 名前を入れたので、正しく「任意（required: false）」になります
       label: "分析",
       description: "<p>これらのクッキーは、どのページが最も人気があるか、また訪問者がサイト内をどのように移動しているかを追跡することで、当サイトの改善に役立てています。</p>",
       required: false,
       scripts: [
         {
-          url: "https://rawcdn.githack.com/ryopc/Archive/763937053e7d03a57cf824c4df5cd46bc6b8ab7e/zqls-an.js",
+          url: "https://githack.com",
           load: "async"
         }
       ],
       onAccept: function() {
-        // Custom script loaded: https://rawcdn.githack.com/ryopc/Archive/763937053e7d03a57cf824c4df5cd46bc6b8ab7e/zqls-an.js
+        // Custom script loaded: https://githack.com
       }
     },
     {
-      id: "",
+      id: "support", // 👈 名前を入れたので、正しく「任意（required: false）」になります
       label: "カスタマーサポート",
       description: "<p>このクッキーは、お客様に最適なサポートを提供するために役立ちます。</p>",
       required: false,
