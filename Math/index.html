@@ -33,12 +33,12 @@
 
         /* 選択されているマスの強調アニメーション */
         @keyframes pulse-border {
-            0%, 100% { border-color: #4f46e5; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.4); }
-            50% { border-color: #818cf8; box-shadow: 0 0 0 5px rgba(129, 140, 248, 0.6); }
+            0%, 100% { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.4); }
+            50% { border-color: #818cf8; box-shadow: 0 0 0 6px rgba(129, 140, 248, 0.6); }
         }
         .active-cell {
             animation: pulse-border 1s infinite ease-in-out;
-            background-color: #e0e7ff !important;
+            background-color: #f0f3ff !important;
         }
 
         /* 手書きキャンバスの重ね合わせ調整 */
@@ -54,19 +54,23 @@
             z-index: 30;
             cursor: crosshair;
         }
+
+        /* チャットポップアップの表示アニメーション */
+        .chat-popup {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: scale(0.8) translateY(20px);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .chat-popup.open {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
     </style>
 </head>
-<body class="bg-indigo-50/20 text-slate-800 min-h-screen flex flex-col justify-between overflow-x-hidden">
+<body class="bg-indigo-50/20 text-slate-800 min-h-screen flex flex-col justify-between overflow-x-hidden pb-4">
 
-    <!-- クッキー同意バナー (指定文面) -->
-    <div id="cookie-banner" class="fixed bottom-4 left-4 right-4 md:left-auto md:max-w-md bg-slate-900 text-white p-4 rounded-2xl shadow-2xl border border-slate-700 z-50 transform translate-y-20 opacity-0 transition-all duration-500 flex flex-col sm:flex-row items-center gap-3">
-        <div class="flex-1 text-xs text-slate-300 leading-relaxed">
-            <p>当サイトでは、ユーザー体験の向上およびアクセス状況の分析を目的として、クッキーを使用しています。</p>
-        </div>
-        <button onclick="acceptCookies()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition-all text-white text-xs font-black rounded-xl shrink-0">
-            同意して閉じる
-        </button>
-    </div>
 
     <!-- APIキー設定ダイアログ (BYOK) -->
     <div id="api-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -82,7 +86,7 @@
             </div>
             
             <p class="text-xs text-slate-500 leading-relaxed">
-                ZaqLessでは、1対1のAI学習指導を誰もが無料で使えるように、おうちの「無料枠Gemini APIキー」を利用する仕組みを採用しています。設定はとても簡単です！
+                ZaqLessでは、1対1 of AI学習指導を誰もが無料で使えるように、おうちの「無料枠Gemini APIキー」を利用する仕組みを採用しています。設定はとても簡単です！
             </p>
 
             <div class="flex flex-col gap-1">
@@ -121,7 +125,7 @@
             </div>
         </div>
 
-        <!-- 学年セレクター (年齢に合わせて変更) -->
+        <!-- 学年セレクター -->
         <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
             <span class="text-[9px] font-bold text-slate-500 px-1">学年:</span>
             <select id="grade-select" onchange="changeGrade(this.value)" class="bg-white text-xs font-bold text-indigo-700 border-none outline-none rounded-lg py-1 px-2 cursor-pointer shadow-sm">
@@ -138,7 +142,7 @@
                 <i data-lucide="bot" class="w-3.5 h-3.5"></i>
                 <span id="api-status-text">AI設定</span>
             </button>
-            <button id="btn-reset" class="flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-[10px] font-bold transition-all">
+            <button id="btn-reset" onclick="resetAll()" class="flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-[10px] font-bold transition-all">
                 <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
                 <span>リセット</span>
             </button>
@@ -182,12 +186,25 @@
                     osc.stop(now + 0.4);
                 } else if (type === 'incorrect') {
                     osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(150, now);
-                    osc.frequency.setValueAtTime(120, now + 0.12);
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.setValueAtTime(130, now + 0.12);
                     gain.gain.setValueAtTime(0.12, now);
                     gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
                     osc.start(now);
                     osc.stop(now + 0.25);
+                } else if (type === 'perfect') {
+                    // ファンファーレ風
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                    osc.frequency.setValueAtTime(1046.50, now + 0.3); // C6
+                    osc.frequency.setValueAtTime(1318.51, now + 0.4); // E6
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.2, now + 0.4);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.6);
+                    osc.start(now);
+                    osc.stop(now + 0.7);
                 }
             } catch (e) {
                 console.log("Audio play blocked", e);
@@ -195,10 +212,10 @@
         }
     </script>
 
-    <!-- メインワークスペース (PC・タブレットではスクロールなし横並び、スマホでは縦積み) -->
-    <main class="flex-1 w-full max-w-7xl mx-auto px-4 py-4 flex flex-col lg:flex-row gap-4 items-stretch justify-center h-auto lg:h-[calc(100vh-140px)]">
+    <!-- メインワークスペース -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 py-4 flex flex-col xl:flex-row gap-4 items-stretch justify-center h-auto xl:h-[calc(100vh-140px)]">
         
-        <!-- 左側：ひっ算ツール＆コントロール（主役） -->
+        <!-- 左側：ひっ算ツールボード (横幅を少し広く) -->
         <div class="flex-1 flex flex-col gap-3 min-w-0 h-full">
             <!-- 相互作用モード & 問題自動生成 -->
             <div class="flex flex-col sm:flex-row gap-2 shrink-0">
@@ -213,7 +230,7 @@
                     </button>
                 </div>
 
-                <!-- 年齢・学年に合わせた自動出題ボタン -->
+                <!-- 自動出題ボタン -->
                 <button onclick="generateRandomProblem()" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-2xl shadow-md font-black text-xs flex items-center justify-center gap-2 transition-transform active:scale-95 shrink-0">
                     <i data-lucide="shuffle" class="w-4 h-4 text-amber-300"></i>
                     <span>もんだいを作る！</span>
@@ -264,10 +281,21 @@
                 <canvas id="drawing-canvas" class="pointer-events-none opacity-0 transition-opacity duration-200"></canvas>
 
                 <!-- 手書きツールバー -->
-                <div id="draw-tools" class="absolute top-2 right-2 flex gap-1 z-40 hidden">
+                <div id="draw-tools" class="absolute top-2 right-2 flex flex-wrap gap-1.5 z-40 hidden max-w-[90%] justify-end">
+                    <!-- 色変更 -->
+                    <div class="flex bg-slate-100 rounded-lg p-0.5 shadow-sm">
+                        <button onclick="setDrawColor('#e11d48')" id="color-red" class="w-6 h-6 rounded-full bg-rose-600 border-2 border-white scale-110 transition-transform"></button>
+                        <button onclick="setDrawColor('#2563eb')" id="color-blue" class="w-6 h-6 rounded-full bg-blue-600 border-2 border-transparent transition-transform ml-1"></button>
+                    </div>
+                    <!-- 太さ変更 -->
+                    <div class="flex bg-slate-100 rounded-lg p-0.5 shadow-sm">
+                        <button onclick="setDrawWidth(3)" id="width-thin" class="px-2 py-1 text-[9px] font-bold rounded bg-indigo-600 text-white transition-all">細</button>
+                        <button onclick="setDrawWidth(7)" id="width-thick" class="px-2 py-1 text-[9px] font-bold rounded hover:bg-slate-200 text-slate-600 transition-all ml-1">太</button>
+                    </div>
+                    <!-- 消しゴム系 -->
                     <button id="tool-pen" onclick="setDrawTool('pen')" class="p-2 bg-indigo-600 text-white rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md">
                         <i data-lucide="pencil" class="w-3 h-3"></i>
-                        <span>赤ペン</span>
+                        <span>ペン</span>
                     </button>
                     <button id="tool-eraser" onclick="setDrawTool('eraser')" class="p-2 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md hover:bg-slate-200">
                         <i data-lucide="eraser" class="w-3 h-3"></i>
@@ -275,155 +303,195 @@
                     </button>
                     <button onclick="clearCanvas()" class="p-2 bg-rose-100 text-rose-700 rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md hover:bg-rose-200">
                         <i data-lucide="trash-2" class="w-3 h-3"></i>
-                        <span>メモ消去</span>
+                        <span>クリア</span>
                     </button>
                 </div>
 
                 <!-- ガイド説明 -->
                 <div id="top-guide-text" class="absolute top-2 left-3 flex items-center gap-1 text-[10px] text-slate-400 z-10 font-bold">
                     <i data-lucide="info" class="w-3.5 h-3.5"></i>
-                    <span id="guide-message-text">青いマスをえらんで、下のキーボードで数字を入れてね</span>
+                    <span id="guide-message-text">青いマスをえらんで、横のキーボードで数字を入れてね</span>
+                </div>
+
+                <!-- 正解判定お祝いメッセージ -->
+                <div id="congrats-overlay" class="absolute inset-0 bg-emerald-500/90 flex flex-col items-center justify-center text-white font-bold z-40 hidden transition-all duration-300">
+                    <div class="text-6xl animate-bounce mb-4">🌟 できた！ 🌟</div>
+                    <div class="text-xl tracking-wider">せいかい！よくがんばったね！</div>
+                    <button onclick="hideCongrats()" class="mt-6 px-6 py-3 bg-white text-emerald-700 font-extrabold rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-transform">つぎの問題へ！</button>
                 </div>
 
                 <!-- 標準のひっ算（足し、引き、掛け算） -->
                 <div id="standard-calc-grid" class="flex flex-col items-end gap-1.5 my-8 select-none z-10 transition-all">
-                    <!-- ここに動的にマス目が生成されます -->
+                    <!-- 動的にマス目が生成されます -->
                 </div>
 
                 <!-- わり算のひっ算 -->
                 <div id="division-calc-grid" class="hidden flex-col items-start gap-1.5 my-8 select-none z-10 transition-all">
-                    <!-- ここにわり算用の特別なグリッドが生成されます -->
+                    <!-- わり算用の特別なグリッドが生成されます -->
                 </div>
 
-                <!-- 桁数ヘルパー -->
-                <div id="digit-helper" class="mb-4 text-[10px] text-slate-500 bg-slate-100 px-3 py-1 rounded-full flex gap-2 items-center z-10 font-bold shrink-0">
-                    <span>👈️ こっちが「一のくらい」だよ</span>
+                <!-- 桁数ヘルパー & サポートコントロール -->
+                <div class="flex gap-2 items-center z-10">
+                    <div id="digit-helper" class="mb-4 text-[10px] text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full flex gap-2 items-center font-bold shrink-0">
+                        <span>👈️ こっちが「一のくらい」だよ</span>
+                    </div>
+                </div>
+
+                <!-- サポートアクションボタン -->
+                <div class="absolute bottom-2 right-2 flex gap-1.5 z-20">
+                    <button onclick="showPerfectAnswer()" class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl text-[10px] font-bold flex items-center gap-1 transition-all active:scale-95">
+                        <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
+                        <span>答えをみる</span>
+                    </button>
+                    <button onclick="checkProblemAnswer()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[10px] font-black flex items-center gap-1 shadow-md transition-all active:scale-95">
+                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-amber-300"></i>
+                        <span>できた！判定</span>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- 右側：AIおしゃべりバディ「Gemini先生」 & ソフトウェアテンキー (大画面時は右側に縦積み) -->
-        <div class="w-full lg:w-[380px] flex flex-col gap-3 shrink-0 h-full justify-between">
-            
-            <!-- Gemini先生チャットボード -->
-            <div class="bg-white rounded-3xl border-2 border-indigo-100/50 shadow-sm p-4 flex flex-col justify-between flex-1 min-h-[300px]">
-                <!-- チャットヘッダー -->
-                <div class="flex items-center justify-between border-b border-indigo-50 pb-3">
-                    <div class="flex items-center gap-2">
-                        <div class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-lg shadow-sm">🤖</div>
-                        <div>
-                            <div class="flex items-center gap-1">
-                                <h3 class="text-xs font-black text-slate-800">Gemini先生</h3>
-                                <span class="text-[8px] bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded-full font-bold">BYOK</span>
-                            </div>
-                            <p class="text-[9px] text-slate-400">紙への落書きを一緒に楽しむバディ</p>
-                        </div>
+        <!-- 横隣に配置された ソフトウェアキーボード (PC時：ひっ算の右横に合体) -->
+        <div id="keyboard-footer" class="w-full xl:w-[280px] bg-slate-100 border border-slate-300 p-3 rounded-3xl transition-all shrink-0 flex flex-col gap-2 justify-center h-full">
+            <div class="flex flex-col gap-2">
+                <!-- キーボード上部のアクション -->
+                <div class="flex justify-between items-center px-1">
+                    <span class="text-[9px] font-bold text-slate-600 flex items-center gap-1">
+                        <i data-lucide="keyboard" class="w-3.5 h-3.5 text-indigo-500"></i>
+                        <span id="keyboard-target-label" class="truncate max-w-[130px]">ますめを選んでね</span>
+                    </span>
+                    <div class="flex gap-1 scale-90 shrink-0">
+                        <button onclick="moveSelection('left')" class="p-1 bg-white active:bg-slate-200 border border-slate-300 rounded shadow-sm text-slate-700"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="moveSelection('right')" class="p-1 bg-white active:bg-slate-200 border border-slate-300 rounded shadow-sm text-slate-700"><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="moveSelection('up')" class="p-1 bg-white active:bg-slate-200 border border-slate-300 rounded shadow-sm text-slate-700"><i data-lucide="arrow-up" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="moveSelection('down')" class="p-1 bg-white active:bg-slate-200 border border-slate-300 rounded shadow-sm text-slate-700"><i data-lucide="arrow-down" class="w-3.5 h-3.5"></i></button>
                     </div>
-                    <button onclick="toggleApiModal(true)" class="text-[9px] text-indigo-600 hover:underline font-bold">
+                </div>
+
+                <!-- キーパッド本体 -->
+                <div class="grid grid-cols-4 gap-1.5 text-sm">
+                    <button onclick="pressKey('1')" class="py-3 bg-white hover:bg-slate-50 active:bg-slate-200 border border-slate-300 font-black rounded-2xl shadow-sm text-slate-800 transition-all">1</button>
+                    <button onclick="pressKey('2')" class="py-3 bg-white hover:bg-slate-50 active:bg-slate-200 border border-slate-300 font-black rounded-2xl shadow-sm text-slate-800 transition-all">2</button>
+                    <button onclick="pressKey('3')" class="py-3 bg-white hover:bg-slate-50 active:bg-slate-200 border border-slate-300 font-black rounded-2xl shadow-sm text-slate-800 transition-all">3</button>
+                    
+                    <!-- けす (バックスペース) -->
+                    <button onclick="pressKey('backspace')" class="row-span-2 py-3 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-black rounded-2xl shadow-sm flex flex-col items-center justify-center gap-1 transition-all">
+                        <i data-lucide="delete" class="w-5 h-5"></i>
+                        <span class="text-[10px]">けす</span>
+                    </button>
+
+                    <button onclick="pressKey('4')" class="py-3 bg-white hover:bg-slate-50 active:bg-slate-200 border border-slate-300 font-black rounded-2xl shadow-sm text-slate-800 transition-all">4</button>
+                    <button onclick="pressKey('5')" class="py-3 bg-white hover:bg-slate-50 active:bg-slate-200 border border-slate-300 font-black rounded-2xl shadow-sm text-slate-800 transition-all">5</button>
+                    <button onclick="pressKey('6')" class="py-3 bg-white hover:bg-slate-50 active:bg-slate-200 border border-slate-300 font-black rounded-2xl shadow-sm text-slate-800 transition-all">6</button>
+
+                    <button onclick="pressKey('7')" class="py-3 bg-white hover:bg-slate-50 active:bg-slate-200 border border-slate-300 font-black rounded-2xl shadow-sm text-slate-800 transition-all">7</button>
+                    <button onclick="pressKey('8')" class="py-3 bg-white hover:bg-slate-50 active:bg-slate-200 border border-slate-300 font-black rounded-2xl shadow-sm text-slate-800 transition-all">8</button>
+                    <button onclick="pressKey('9')" class="py-3 bg-white hover:bg-slate-50 active:bg-slate-200 border border-slate-300 font-black rounded-2xl shadow-sm text-slate-800 transition-all">9</button>
+
+                    <!-- 全消去 -->
+                    <button onclick="pressKey('clear')" class="py-3 bg-slate-300 hover:bg-slate-400 active:bg-slate-500 text-slate-850 font-black rounded-2xl shadow-sm text-[10px] transition-all">クリア</button>
+
+                    <!-- 0 -->
+                    <button onclick="pressKey('0')" class="col-span-2 py-3 bg-white hover:bg-slate-50 active:bg-slate-200 border border-slate-300 font-black rounded-2xl shadow-sm text-slate-800 transition-all">0</button>
+                    
+                    <!-- 小数点 / ドット -->
+                    <button onclick="pressKey('.')" class="py-3 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 font-bold rounded-2xl shadow-sm transition-all">.</button>
+
+                    <!-- 進む -->
+                    <button onclick="pressKey('next')" class="col-span-4 py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-black text-xs rounded-2xl shadow-sm flex items-center justify-center gap-1 transition-all">
+                        <span>つぎのマスに進む</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 🤖 右下：AIおしゃべりバディ「Gemini先生」フローティングシステム -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+        
+        <!-- チャットポップアップ窓 -->
+        <div id="chat-popup" class="chat-popup w-[320px] md:w-[360px] h-[400px] md:h-[450px] bg-white rounded-3xl border-2 border-indigo-100 shadow-2xl p-4 flex flex-col justify-between overflow-hidden">
+            <!-- チャットヘッダー -->
+            <div class="flex items-center justify-between border-b border-indigo-50 pb-2 shrink-0">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center text-base shadow-sm">🤖</div>
+                    <div>
+                        <div class="flex items-center gap-1">
+                            <h3 class="text-xs font-black text-slate-800">Gemini先生</h3>
+                            <span class="text-[8px] bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded-full font-bold">BYOK</span>
+                        </div>
+                        <p class="text-[8px] text-slate-400">紙への落書きを一緒に楽しむおともだち</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleApiModal(true)" class="text-[8px] text-indigo-600 hover:underline font-bold">
                         [キー変更]
                     </button>
-                </div>
-
-                <!-- チャット履歴エリア -->
-                <div id="chat-messages" class="flex-1 overflow-y-auto py-3 flex flex-col gap-3 no-scrollbar max-h-[160px] lg:max-h-[220px]">
-                    <!-- 初期メッセージ -->
-                    <div class="flex gap-2 items-start text-[10px]">
-                        <div class="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center shrink-0">🤖</div>
-                        <div class="bg-indigo-50 p-2.5 rounded-2xl rounded-tl-none text-indigo-900 leading-relaxed max-w-[85%] font-medium">
-                            こんにちは！ZaqLessへようこそ！<br>
-                            問題は「もんだいを作る！」から自動で作れるよ。計算メモは手元のいらない紙に自由に書いてね！<br>
-                            <span class="text-indigo-600 font-bold">紙にメモを書いたら、下のボタンから教えてね！</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- クイック落書き報告ボタン -->
-                <div class="border-t border-indigo-50 pt-2 flex flex-col gap-1 shrink-0">
-                    <span class="text-[8px] font-bold text-slate-400 pl-1 uppercase tracking-wider">紙への落書きを報告する：</span>
-                    <div class="grid grid-cols-2 gap-1 text-[9px] font-bold">
-                        <button onclick="sendQuickReport('10借りて斜め線引いた！')" class="quick-btn py-1.5 px-1 border border-indigo-100 rounded-xl bg-indigo-50/50 text-indigo-700 hover:bg-indigo-50 active:scale-95 transition-all text-center">
-                            ✏️ 10を借りた！
-                        </button>
-                        <button onclick="sendQuickReport('くり上がりの1を書いた')" class="quick-btn py-1.5 px-1 border border-indigo-100 rounded-xl bg-indigo-50/50 text-indigo-700 hover:bg-indigo-50 active:scale-95 transition-all text-center">
-                            ✏️ 繰り上がりの1
-                        </button>
-                        <button onclick="sendQuickReport('あまりの数字を下ろしたよ')" class="quick-btn py-1.5 px-1 border border-indigo-100 rounded-xl bg-indigo-50/50 text-indigo-700 hover:bg-indigo-50 active:scale-95 transition-all text-center">
-                            ✏️ あまりを下ろした
-                        </button>
-                        <button onclick="sendQuickReport('計算方法がわからなくなっちゃった')" class="quick-btn py-1.5 px-1 border border-rose-100 rounded-xl bg-rose-50/50 text-rose-700 hover:bg-rose-50 active:scale-95 transition-all text-center">
-                            ❓️ わからない！
-                        </button>
-                    </div>
-                </div>
-
-                <!-- チャット入力欄 -->
-                <div class="mt-2 pt-2 border-t border-indigo-50 flex gap-1.5 items-center shrink-0">
-                    <input type="text" id="chat-input" placeholder="Gemini先生に直接質問..." class="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-[10px] focus:outline-none focus:border-indigo-500">
-                    <button onclick="sendCustomMessage()" class="p-2 bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition-all text-white rounded-xl shadow-md">
-                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    <button onclick="toggleChatPopup(false)" class="p-1 text-slate-400 hover:text-slate-600">
+                        <i data-lucide="chevrons-down" class="w-4 h-4"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- ソフトウェアキーボード (スマホでは最下部、PC/タブレットでは右下サイドに統合可能) -->
-            <div id="keyboard-footer" class="bg-slate-100 border border-slate-300 p-2 rounded-2xl transition-all shrink-0">
-                <div class="flex flex-col gap-1">
-                    <!-- キーボード上部のアクション -->
-                    <div class="flex justify-between items-center px-1">
-                        <span class="text-[9px] font-bold text-slate-500 flex items-center gap-1">
-                            <i data-lucide="keyboard" class="w-3.5 h-3.5 text-indigo-500"></i>
-                            <span id="keyboard-target-label">ますめを選んでね</span>
-                        </span>
-                        <div class="flex gap-1 scale-90">
-                            <button onclick="moveSelection('left')" class="p-1 bg-white active:bg-slate-200 border border-slate-300 rounded shadow-sm text-slate-700"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i></button>
-                            <button onclick="moveSelection('right')" class="p-1 bg-white active:bg-slate-200 border border-slate-300 rounded shadow-sm text-slate-700"><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></button>
-                            <button onclick="moveSelection('up')" class="p-1 bg-white active:bg-slate-200 border border-slate-300 rounded shadow-sm text-slate-700"><i data-lucide="arrow-up" class="w-3.5 h-3.5"></i></button>
-                            <button onclick="moveSelection('down')" class="p-1 bg-white active:bg-slate-200 border border-slate-300 rounded shadow-sm text-slate-700"><i data-lucide="arrow-down" class="w-3.5 h-3.5"></i></button>
-                        </div>
-                    </div>
-
-                    <!-- キーパッド本体 -->
-                    <div class="grid grid-cols-4 gap-1 text-xs">
-                        <button onclick="pressKey('1')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">1</button>
-                        <button onclick="pressKey('2')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">2</button>
-                        <button onclick="pressKey('3')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">3</button>
-                        
-                        <!-- クリアキー -->
-                        <button onclick="pressKey('clear')" class="row-span-2 py-2 bg-rose-500 active:bg-rose-600 text-white font-bold rounded shadow-sm flex flex-col items-center justify-center gap-0.5">
-                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                            <span class="text-[8px]">けす</span>
-                        </button>
-
-                        <button onclick="pressKey('4')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">4</button>
-                        <button onclick="pressKey('5')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">5</button>
-                        <button onclick="pressKey('6')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">6</button>
-
-                        <button onclick="pressKey('7')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">7</button>
-                        <button onclick="pressKey('8')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">8</button>
-                        <button onclick="pressKey('9')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">9</button>
-
-                        <!-- バックスペース -->
-                        <button onclick="pressKey('backspace')" class="py-2 bg-slate-200 active:bg-slate-300 text-slate-800 font-bold rounded shadow-sm flex items-center justify-center">
-                            <i data-lucide="delete" class="w-3.5 h-3.5"></i>
-                        </button>
-
-                        <!-- 0 -->
-                        <button onclick="pressKey('0')" class="col-span-2 py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">0</button>
-                        
-                        <!-- 小数点 / ドット -->
-                        <button onclick="pressKey('.')" class="py-2 bg-slate-200 active:bg-slate-300 text-slate-700 font-bold rounded shadow-sm">.</button>
-
-                        <!-- 進む -->
-                        <button onclick="pressKey('next')" class="col-span-4 py-1.5 bg-indigo-600 active:bg-indigo-700 text-white font-bold text-[10px] rounded shadow-sm flex items-center justify-center gap-1">
-                            <span>つぎのマス</span>
-                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
-                        </button>
+            <!-- チャット履歴エリア (高さを大きく) -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto py-3 flex flex-col gap-3 no-scrollbar max-h-full">
+                <!-- 初期メッセージ -->
+                <div class="flex gap-2 items-start text-[10px]">
+                    <div class="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center shrink-0">🤖</div>
+                    <div class="bg-indigo-50 p-2.5 rounded-2xl rounded-tl-none text-indigo-900 leading-relaxed max-w-[85%] font-medium">
+                        こんにちは！ZaqLessへようこそ！<br>
+                        問題は「もんだいを作る！」から自動で作れるよ。計算メモは手元のいらない紙に自由に書いてね！<br>
+                        <span class="text-indigo-600 font-bold">紙にメモを書いたら、下のボタンから教えてね！</span>
                     </div>
                 </div>
             </div>
 
+            <!-- クイック落書き報告ボタン -->
+            <div class="border-t border-indigo-50 pt-2 flex flex-col gap-1 shrink-0 bg-white">
+                <span class="text-[8px] font-bold text-slate-400 pl-1 uppercase tracking-wider">紙への落書きを報告する：</span>
+                <div class="grid grid-cols-2 gap-1 text-[9px] font-bold">
+                    <button onclick="sendQuickReport('10借りて斜め線引いた！')" class="quick-btn py-1.5 px-1 border border-indigo-100 rounded-xl bg-indigo-50/50 text-indigo-700 hover:bg-indigo-50 active:scale-95 transition-all text-center">
+                        ✏️ 10を借りた！
+                    </button>
+                    <button onclick="sendQuickReport('くり上がりの1を書いた')" class="quick-btn py-1.5 px-1 border border-indigo-100 rounded-xl bg-indigo-50/50 text-indigo-700 hover:bg-indigo-50 active:scale-95 transition-all text-center">
+                        ✏️ 繰り上がりの1
+                    </button>
+                    <button onclick="sendQuickReport('あまりの数字を下ろしたよ')" class="quick-btn py-1.5 px-1 border border-indigo-100 rounded-xl bg-indigo-50/50 text-indigo-700 hover:bg-indigo-50 active:scale-95 transition-all text-center">
+                        ✏️ あまりを下ろした
+                    </button>
+                    <button onclick="sendQuickReport('計算方法がわからなくなっちゃった')" class="quick-btn py-1.5 px-1 border border-rose-100 rounded-xl bg-rose-50/50 text-rose-700 hover:bg-rose-50 active:scale-95 transition-all text-center">
+                        ❓️ わからない！
+                    </button>
+                </div>
+            </div>
+
+            <!-- チャット入力欄 -->
+            <div class="mt-2 pt-2 border-t border-indigo-50 flex gap-1.5 items-center shrink-0 bg-white">
+                <input type="text" id="chat-input" placeholder="Gemini先生に直接しつもん..." class="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-[10px] focus:outline-none focus:border-indigo-500">
+                <button onclick="sendCustomMessage()" class="p-2 bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition-all text-white rounded-xl shadow-md">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
         </div>
-    </main>
+
+        <!-- 丸いロボット型チャットバブル (フローティングボタン) -->
+        <div class="flex items-center gap-2">
+            <!-- 吹き出しヒント (最初期に気づきやすくするための演出) -->
+            <div id="ai-hint-bubble" class="bg-indigo-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-2xl shadow-lg border-2 border-indigo-500 relative flex items-center gap-1 animate-bounce">
+                <span>しつもんはこちら！</span>
+                <div class="absolute right-[-6px] top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[6px] border-l-indigo-600"></div>
+            </div>
+
+            <button onclick="toggleChatPopup()" id="chat-bubble-btn" class="w-14 h-14 bg-gradient-to-tr from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 active:scale-90 text-white rounded-full flex items-center justify-center shadow-2xl border-4 border-white transition-all duration-200 relative group">
+                <span class="text-2xl group-hover:animate-wiggle">🤖</span>
+                <!-- 通知バッジ風（AI有効時にピカピカ光る） -->
+                <span id="ai-badge" class="absolute top-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></span>
+            </button>
+        </div>
+
+    </div>
 
     <!-- システムコアースクリプト -->
     <script>
@@ -432,10 +500,16 @@
         let activeCell = null; 
         let interactionMode = 'input'; 
         let activeDrawTool = 'pen'; 
+        let activeDrawColor = '#e11d48';
+        let activeDrawWidth = 3;
         let currentGrade = 2; // 1: 小1, 2: 小2, 3: 小3, 4: 小4, 5: 小5以上
         
         let gridData = [];
         let carryData = [];
+
+        // 自動生成した現在の問題の数値（判定用）
+        let currentNum1Str = "0";
+        let currentNum2Str = "0";
 
         let divisionData = {
             dividend: ['', '', ''],
@@ -474,11 +548,40 @@
             initCanvas();
             checkCookieConsent();
             checkApiKeyOnLoad();
-            generateRandomProblem(); // 初期起動時に難易度に合わせた問題をセット
+            generateRandomProblem();
+
+            // 最初だけチャットを少しアピールして開く
+            setTimeout(() => {
+                toggleChatPopup(true);
+            }, 800);
 
             // 物理キーボードの連動設定
             window.addEventListener('keydown', handlePhysicalKeyboard);
         };
+
+        // AIチャットの開閉コントロール
+        function toggleChatPopup(forceState) {
+            const popup = document.getElementById('chat-popup');
+            const hint = document.getElementById('ai-hint-bubble');
+            playSound('tap');
+            
+            if (forceState !== undefined) {
+                if (forceState) {
+                    popup.classList.add('open');
+                    if (hint) hint.classList.add('hidden');
+                } else {
+                    popup.classList.remove('open');
+                }
+                return;
+            }
+
+            if (popup.classList.contains('open')) {
+                popup.classList.remove('open');
+            } else {
+                popup.classList.add('open');
+                if (hint) hint.classList.add('hidden');
+            }
+        }
 
         function initCanvas() {
             const resizeCanvas = () => {
@@ -540,6 +643,36 @@
             playSound('tap');
         }
 
+        function setDrawColor(color) {
+            activeDrawColor = color;
+            document.getElementById('color-red').classList.remove('scale-110', 'border-white');
+            document.getElementById('color-red').classList.add('border-transparent');
+            document.getElementById('color-blue').classList.remove('scale-110', 'border-white');
+            document.getElementById('color-blue').classList.add('border-transparent');
+
+            if (color === '#e11d48') {
+                document.getElementById('color-red').classList.add('scale-110', 'border-white');
+            } else {
+                document.getElementById('color-blue').classList.add('scale-110', 'border-white');
+            }
+            playSound('tap');
+            setDrawTool('pen');
+        }
+
+        function setDrawWidth(w) {
+            activeDrawWidth = w;
+            document.getElementById('width-thin').className = "px-2 py-1 text-[9px] font-bold rounded hover:bg-slate-200 text-slate-600 transition-all";
+            document.getElementById('width-thick').className = "px-2 py-1 text-[9px] font-bold rounded hover:bg-slate-200 text-slate-600 transition-all ml-1";
+
+            if (w === 3) {
+                document.getElementById('width-thin').className = "px-2 py-1 text-[9px] font-bold rounded bg-indigo-600 text-white transition-all";
+            } else {
+                document.getElementById('width-thick').className = "px-2 py-1 text-[9px] font-bold rounded bg-indigo-600 text-white transition-all ml-1";
+            }
+            playSound('tap');
+            setDrawTool('pen');
+        }
+
         function setDrawTool(tool) {
             activeDrawTool = tool;
             const penBtn = document.getElementById('tool-pen');
@@ -550,15 +683,15 @@
                 penBtn.className = "p-2 bg-indigo-600 text-white rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md";
                 eraserBtn.className = "p-2 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md hover:bg-slate-200";
                 ctx.globalCompositeOperation = 'source-over';
-                ctx.strokeStyle = '#e11d48'; 
-                ctx.lineWidth = 3;
+                ctx.strokeStyle = activeDrawColor; 
+                ctx.lineWidth = activeDrawWidth;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
             } else {
                 penBtn.className = "p-2 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md hover:bg-slate-200";
                 eraserBtn.className = "p-2 bg-indigo-600 text-white rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md";
                 ctx.globalCompositeOperation = 'destination-out';
-                ctx.lineWidth = 15;
+                ctx.lineWidth = 18;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
             }
@@ -574,7 +707,7 @@
                 canvas.classList.remove('pointer-events-none', 'opacity-0');
                 canvas.classList.add('pointer-events-auto', 'opacity-100');
                 drawTools.classList.remove('hidden');
-                guideMessageText.innerText = "✏️ メモ落書き：指やペンで紙と同じように、くり下がりの斜め線や途中計算を自由に書けるよ！";
+                guideMessageText.innerText = "✏️ メモ落書き：指やペンで、くり下がりの斜め線や途中計算を自由に書けるよ！";
                 topGuideText.className = "absolute top-2 left-3 flex items-center gap-1 text-[10px] text-amber-700 z-50 font-bold";
                 keyboardFooter.classList.add('opacity-40', 'pointer-events-none');
                 activeCell = null;
@@ -585,7 +718,7 @@
                 canvas.classList.add('pointer-events-none', 'opacity-0');
                 canvas.classList.remove('pointer-events-auto', 'opacity-100');
                 drawTools.classList.add('hidden');
-                guideMessageText.innerText = "青いマスをえらんで、下のキーボードで数字を入れてね";
+                guideMessageText.innerText = "青いマスをえらんで、横のキーボードで数字を入れてね";
                 topGuideText.className = "absolute top-2 left-3 flex items-center gap-1 text-[10px] text-slate-400 z-10 font-bold";
                 keyboardFooter.classList.remove('opacity-40', 'pointer-events-none');
                 setDrawTool('pen');
@@ -616,7 +749,7 @@
             };
         }
 
-        // 学年と演算子に応じた難易度の自動問題生成システム
+        // 学年と演算子に応じた難易度の自動問題生成
         function changeGrade(val) {
             currentGrade = parseInt(val, 10);
             playSound('tap');
@@ -632,44 +765,37 @@
 
             if (currentOperator === '+') {
                 if (currentGrade === 1) {
-                    // 小1: 1桁〜2桁 (繰り上がりなし中心)
                     num1 = Math.floor(Math.random() * 8) + 2; 
                     num2 = Math.floor(Math.random() * 7) + 1;
                 } else if (currentGrade === 2) {
-                    // 小2: 2桁＋2桁 (繰り上がりあり)
                     num1 = Math.floor(Math.random() * 80) + 15;
                     num2 = Math.floor(Math.random() * 80) + 15;
                 } else if (currentGrade === 3) {
-                    // 小3: 3桁＋3桁
                     num1 = Math.floor(Math.random() * 800) + 150;
                     num2 = Math.floor(Math.random() * 800) + 150;
                 } else {
-                    // 小4以上: 4桁、または小数
                     num1 = Math.floor(Math.random() * 8000) + 1000;
                     num2 = Math.floor(Math.random() * 8000) + 1000;
                     if (currentGrade === 5) {
-                        // 小数点ありに改変
                         num1 = (num1 / 100).toFixed(2);
                         num2 = (num2 / 100).toFixed(2);
                     }
                 }
-                setProblemToStandardGrid(num1.toString(), num2.toString());
+                currentNum1Str = num1.toString();
+                currentNum2Str = num2.toString();
+                setProblemToStandardGrid(currentNum1Str, currentNum2Str);
 
             } else if (currentOperator === '-') {
                 if (currentGrade === 1) {
-                    // 小1: 1桁〜2桁の引き算
                     num1 = Math.floor(Math.random() * 9) + 6;
                     num2 = Math.floor(Math.random() * (num1 - 2)) + 1;
                 } else if (currentGrade === 2) {
-                    // 小2: 2桁ひき算 (繰り下がりあり)
                     num1 = Math.floor(Math.random() * 70) + 30;
                     num2 = Math.floor(Math.random() * (num1 - 10)) + 9;
                 } else if (currentGrade === 3) {
-                    // 小3: 3桁ひき算
                     num1 = Math.floor(Math.random() * 700) + 300;
                     num2 = Math.floor(Math.random() * (num1 - 100)) + 99;
                 } else {
-                    // 小4以上: 4桁、または小数
                     num1 = Math.floor(Math.random() * 7000) + 3000;
                     num2 = Math.floor(Math.random() * (num1 - 1000)) + 999;
                     if (currentGrade === 5) {
@@ -677,41 +803,40 @@
                         num2 = (num2 / 100).toFixed(2);
                     }
                 }
-                setProblemToStandardGrid(num1.toString(), num2.toString());
+                currentNum1Str = num1.toString();
+                currentNum2Str = num2.toString();
+                setProblemToStandardGrid(currentNum1Str, currentNum2Str);
 
             } else if (currentOperator === '×') {
                 if (currentGrade === 1 || currentGrade === 2) {
-                    // かけ算入門: 1桁×1桁 (九九)
                     num1 = Math.floor(Math.random() * 8) + 2;
                     num2 = Math.floor(Math.random() * 8) + 2;
                 } else if (currentGrade === 3) {
-                    // 小3: 2桁×1桁 または 2桁×2桁
                     num1 = Math.floor(Math.random() * 80) + 12;
                     num2 = Math.floor(Math.random() * 8) + 2;
                 } else {
-                    // 小4以上: 3桁×2桁
                     num1 = Math.floor(Math.random() * 800) + 100;
                     num2 = Math.floor(Math.random() * 80) + 12;
                 }
-                setProblemToStandardGrid(num1.toString(), num2.toString());
+                currentNum1Str = num1.toString();
+                currentNum2Str = num2.toString();
+                setProblemToStandardGrid(currentNum1Str, currentNum2Str);
 
             } else if (currentOperator === '÷') {
-                // わり算 (特別なわり算筆算ボード用)
                 if (currentGrade <= 2) {
-                    // わり算基礎
                     num2 = Math.floor(Math.random() * 7) + 2; 
                     const tempQuotient = Math.floor(Math.random() * 8) + 2;
                     num1 = num2 * tempQuotient; 
                 } else if (currentGrade === 3) {
-                    // 小3: あまりありわり算
                     num2 = Math.floor(Math.random() * 8) + 2;
                     num1 = Math.floor(Math.random() * 80) + 10;
                 } else {
-                    // 小4以上: 3桁÷2桁など
                     num2 = Math.floor(Math.random() * 15) + 6;
                     num1 = Math.floor(Math.random() * 200) + 50;
                 }
-                setProblemToDivisionGrid(num1.toString(), num2.toString());
+                currentNum1Str = num1.toString();
+                currentNum2Str = num2.toString();
+                setProblemToDivisionGrid(currentNum1Str, currentNum2Str);
             }
 
             activeCell = null;
@@ -721,21 +846,24 @@
 
         // 割り算グリッドへの問題自動セット
         function setProblemToDivisionGrid(num1Str, num2Str) {
-            // 被除数 (最大3桁)
             const dividendParts = num1Str.split('');
             for (let i = 0; i < 3; i++) {
                 divisionData.dividend[i] = dividendParts[i] || '';
             }
-            // 除数 (最大2桁)
             const divisorParts = num2Str.split('');
             for (let i = 0; i < 2; i++) {
                 divisionData.divisor[i] = divisorParts[i] || '';
             }
+            // 途中計算エリアも綺麗にリセット
+            for (let s = 0; s < 3; s++) {
+                divisionData.steps[s].sub = ['', '', ''];
+                divisionData.steps[s].rem = ['', '', ''];
+            }
+            divisionData.quotient = ['', '', ''];
         }
 
         // 通常の筆算グリッドへの問題自動セット
         function setProblemToStandardGrid(num1Str, num2Str) {
-            // グリッドサイズを桁数に応じて最適化
             const maxLen = Math.max(num1Str.length, num2Str.length);
             if (maxLen >= 5) {
                 changeGridSizeWithoutReset(5);
@@ -745,21 +873,21 @@
                 changeGridSizeWithoutReset(3);
             }
 
-            // 1行目に数値1を右寄せで配置
+            // 1行目に数値1を右寄せ
             const num1Parts = num1Str.split('');
             for (let c = 0; c < gridSize; c++) {
                 const charIdx = num1Parts.length - (gridSize - c);
                 gridData[0][c] = charIdx >= 0 ? num1Parts[charIdx] : '';
             }
 
-            // 2行目に数値2を右寄せで配置
+            // 2行目に数値2を右寄せ
             const num2Parts = num2Str.split('');
             for (let c = 0; c < gridSize; c++) {
                 const charIdx = num2Parts.length - (gridSize - c);
                 gridData[1][c] = charIdx >= 0 ? num2Parts[charIdx] : '';
             }
 
-            // 答えのマス(3行目以降)を空にしてユーザーが解く状態にする
+            // 答えのマスを空にする
             for (let r = 2; r < gridSize; r++) {
                 for (let c = 0; c < gridSize; c++) {
                     gridData[r][c] = '';
@@ -893,9 +1021,18 @@
                     }
                     if (interactionMode === 'draw') cellBtn.classList.add('pointer-events-none', 'opacity-80');
 
+                    // 問題数値部分はクリック不可、解答部分やくり上がり行のみ選択・編集可能に
+                    const isReadOnly = (r < 2);
+                    if (isReadOnly) {
+                        cellBtn.className += " opacity-90 cursor-default bg-slate-50";
+                    }
+
                     const rowIdx = r;
                     const colIdx = c;
-                    cellBtn.onclick = (e) => { e.stopPropagation(); selectCell('grid', rowIdx, colIdx); };
+                    cellBtn.onclick = (e) => { 
+                        e.stopPropagation(); 
+                        if (!isReadOnly) selectCell('grid', rowIdx, colIdx); 
+                    };
                     rowDiv.appendChild(cellBtn);
                 }
 
@@ -929,8 +1066,8 @@
             rowMain.className = "flex items-center gap-1.5";
             const divDivisor = document.createElement('div');
             divDivisor.className = "flex gap-1.5";
-            divDivisor.appendChild(createDivCell('divisor', 0, 0, 'bg-white border-slate-300'));
-            divDivisor.appendChild(createDivCell('divisor', 0, 1, 'bg-white border-slate-300'));
+            divDivisor.appendChild(createDivCell('divisor', 0, 0, 'bg-slate-50 border-slate-300 cursor-default'));
+            divDivisor.appendChild(createDivCell('divisor', 0, 1, 'bg-slate-50 border-slate-300 cursor-default'));
             rowMain.appendChild(divDivisor);
 
             const symbol = document.createElement('div');
@@ -940,7 +1077,7 @@
             const divDividend = document.createElement('div');
             divDividend.className = "flex gap-1.5";
             for (let i = 0; i < 3; i++) {
-                divDividend.appendChild(createDivCell('dividend', 0, i, 'bg-white border-slate-300'));
+                divDividend.appendChild(createDivCell('dividend', 0, i, 'bg-slate-50 border-slate-300 cursor-default'));
             }
             rowMain.appendChild(divDividend);
             container.appendChild(rowMain);
@@ -994,7 +1131,12 @@
             }
             if (interactionMode === 'draw') btn.classList.add('pointer-events-none', 'opacity-80');
 
-            btn.onclick = (e) => { e.stopPropagation(); selectCell(type, index, pos); };
+            const isReadOnly = (type === 'divisor' || type === 'dividend');
+
+            btn.onclick = (e) => { 
+                e.stopPropagation(); 
+                if (!isReadOnly) selectCell(type, index, pos); 
+            };
             return btn;
         }
 
@@ -1036,7 +1178,7 @@
 
         function updateKeyboardLabel() {
             if (!activeCell) {
-                keyboardTargetLabel.innerText = "ますめをえらんで入力してね";
+                keyboardTargetLabel.innerText = "ますめをえらんでね";
                 return;
             }
 
@@ -1046,42 +1188,61 @@
                 if (colFromRight === 1) place = "十";
                 if (colFromRight === 2) place = "百";
                 if (colFromRight === 3) place = "千";
-                keyboardTargetLabel.innerText = `✏️ 【${place}のくらい】のくり上がりを入力中`;
+                keyboardTargetLabel.innerText = `✏️ 【${place}のくらい】のくり上がり`;
                 return;
             }
 
             if (currentOperator === '÷') {
                 let typeLabel = "わり算";
-                if (activeCell.type === 'quotient') typeLabel = "商（答え）";
-                if (activeCell.type === 'divisor') typeLabel = "わる数（左側）";
-                if (activeCell.type === 'dividend') typeLabel = "わられる数（右側）";
-                keyboardTargetLabel.innerText = `⌨️ ${typeLabel}を入力中`;
+                if (activeCell.type === 'quotient') typeLabel = "商";
+                if (activeCell.type === 'divisor') typeLabel = "わる数";
+                if (activeCell.type === 'dividend') typeLabel = "わられる数";
+                keyboardTargetLabel.innerText = `⌨️ ${typeLabel}`;
             } else {
                 let colFromRight = gridSize - 1 - activeCell.col;
                 let place = "一";
                 if (colFromRight === 1) place = "十";
                 if (colFromRight === 2) place = "百";
-                keyboardTargetLabel.innerText = `⌨️ 【${place}のくらい】に入力中`;
+                keyboardTargetLabel.innerText = `⌨️ 【${place}のくらい】`;
             }
         }
 
         function pressKey(key) {
             if (!activeCell || interactionMode === 'draw') return;
 
-            let value = (key !== 'clear' && key !== 'backspace' && key !== 'next') ? key : '';
+            if (key === 'clear') {
+                // すべてクリア
+                if (currentOperator === '÷') {
+                    divisionData.quotient = ['', '', ''];
+                    for (let s = 0; s < 3; s++) {
+                        divisionData.steps[s].sub = ['', '', ''];
+                        divisionData.steps[s].rem = ['', '', ''];
+                    }
+                } else {
+                    for (let r = 2; r < gridSize; r++) {
+                        for (let c = 0; c < gridSize; c++) gridData[r][c] = '';
+                    }
+                    for (let c = 0; c < gridSize; c++) carryData[c] = '';
+                }
+                playSound('tap');
+                renderGrid();
+                return;
+            }
+
+            let value = (key !== 'backspace' && key !== 'next') ? key : '';
 
             if (activeCell.type === 'carry') {
                 const c = activeCell.col;
-                carryData[c] = (key === 'clear' || key === 'backspace') ? '' : value;
+                carryData[c] = (key === 'backspace') ? '' : value;
             } else if (activeCell.type === 'grid') {
                 const r = activeCell.row;
                 const c = activeCell.col;
-                gridData[r][c] = (key === 'clear' || key === 'backspace') ? '' : value;
+                gridData[r][c] = (key === 'backspace') ? '' : value;
             } else {
                 const r = activeCell.row;
                 const c = activeCell.col;
                 const type = activeCell.type;
-                let finalVal = (key === 'clear' || key === 'backspace') ? '' : value;
+                let finalVal = (key === 'backspace') ? '' : value;
                 
                 if (type === 'quotient') divisionData.quotient[c] = finalVal;
                 else if (type === 'divisor') divisionData.divisor[c] = finalVal;
@@ -1093,18 +1254,15 @@
             playSound('tap');
             renderGrid();
 
-            if (key !== 'clear' && key !== 'backspace' && key !== 'next') {
+            if (key !== 'backspace' && key !== 'next') {
                 autoMoveNext();
             } else if (key === 'next') {
                 autoMoveNext();
             }
         }
 
-        // 物理キーボードとの連動ロジック
         function handlePhysicalKeyboard(e) {
             if (interactionMode === 'draw' || !activeCell) return;
-
-            // チャットの入力欄にフォーカスがある場合はキーボードショートカットを無効化
             if (document.activeElement.id === 'chat-input') return;
 
             if (e.key >= '0' && e.key <= '9') {
@@ -1141,25 +1299,32 @@
             if (!activeCell) return;
             if (currentOperator === '÷') {
                 let type = activeCell.type;
-                let r = activeCell.row;
                 let c = activeCell.col;
+                let r = activeCell.row;
 
-                if (type === 'divisor' && c < 1) selectCell('divisor', 0, c + 1);
-                else if (type === 'divisor' && c === 1) selectCell('dividend', 0, 0);
-                else if (type === 'dividend' && c < 2) selectCell('dividend', 0, c + 1);
-                else if (type === 'dividend' && c === 2) selectCell('quotient', 0, 0);
-                else if (type === 'quotient' && c < 2) selectCell('quotient', 0, c + 1);
+                if (type === 'quotient' && c < 2) selectCell('quotient', 0, c + 1);
+                else if (type === 'quotient' && c === 2) selectCell('step-sub-0', 0, 0);
+                else if (type.startsWith('step-sub-')) {
+                    if (c < 2) selectCell(type, r, c + 1);
+                    else selectCell(`step-rem-${r}`, r, 0);
+                } else if (type.startsWith('step-rem-')) {
+                    if (c < 2) selectCell(type, r, c + 1);
+                    else if (r < 2) selectCell(`step-sub-${r+1}`, r + 1, 0);
+                }
             } else {
                 let r = activeCell.row;
                 let c = activeCell.col;
 
                 if (activeCell.type === 'carry') {
-                    if (c > 0) selectCell('grid', 0, c - 1);
-                } else if (r === gridSize - 1) {
-                    if (c > 0) selectCell('grid', r, c - 1);
+                    if (c > 0) selectCell('carry', -1, c - 1);
+                    else selectCell('grid', 2, gridSize - 1);
                 } else {
-                    if (c < gridSize - 1) selectCell('grid', r, c + 1);
-                    else if (r < gridSize - 2) selectCell('grid', r + 1, 0);
+                    // 入力は右から左に進むのがひっ算の自然な流れ
+                    if (c > 0) {
+                        selectCell('grid', r, c - 1);
+                    } else if (r < gridSize - 1) {
+                        selectCell('grid', r + 1, gridSize - 1);
+                    }
                 }
             }
         }
@@ -1173,6 +1338,92 @@
             else if (direction === 'right' && c < gridSize - 1) selectCell(activeCell.type, r, c + 1);
             else if (direction === 'up' && r > 0) selectCell(activeCell.type, r - 1, c);
             else if (direction === 'down' && r < gridSize - 1) selectCell(activeCell.type, r + 1, c);
+        }
+
+        // せいかい判定ロジック
+        function checkProblemAnswer() {
+            let userResult = "";
+            let correctResult = "";
+
+            const n1 = parseFloat(currentNum1Str);
+            const n2 = parseFloat(currentNum2Str);
+
+            if (currentOperator === '+') correctResult = (n1 + n2).toString();
+            else if (currentOperator === '-') correctResult = (n1 - n2).toString();
+            else if (currentOperator === '×') correctResult = (n1 * n2).toString();
+            else if (currentOperator === '÷') {
+                correctResult = Math.floor(n1 / n2).toString(); // 商
+            }
+
+            if (currentOperator === '÷') {
+                // わり算の商
+                const quotientParts = divisionData.quotient.join('').trim();
+                userResult = parseInt(quotientParts, 10).toString();
+            } else {
+                // 答えの最終行（gridの最終行、もしくはそれより上）
+                let ansRow = gridSize - 1;
+                let ansParts = [];
+                for (let c = 0; c < gridSize; c++) {
+                    ansParts.push(gridData[ansRow][c] || '');
+                }
+                userResult = ansParts.join('').trim();
+                if (userResult.includes('.')) {
+                    userResult = parseFloat(userResult).toString();
+                } else {
+                    userResult = parseInt(userResult, 10).toString();
+                }
+            }
+
+            if (userResult === correctResult) {
+                // 大正解！
+                playSound('perfect');
+                const overlay = document.getElementById('congrats-overlay');
+                overlay.classList.remove('hidden');
+            } else {
+                playSound('incorrect');
+                // AIにヒントをねだる
+                addChatMessage('bot', "うーん、おしい！どこかで計算ミスがあるかも？手元の紙に書いたメモをもう一回見てみてね。ヒントがほしいときは「ヒントを教えて」って話しかけてね！");
+            }
+        }
+
+        function hideCongrats() {
+            const overlay = document.getElementById('congrats-overlay');
+            overlay.classList.add('hidden');
+            generateRandomProblem();
+        }
+
+        // 答えを表示する機能（お助けサポート）
+        function showPerfectAnswer() {
+            const n1 = parseFloat(currentNum1Str);
+            const n2 = parseFloat(currentNum2Str);
+            let ans = 0;
+
+            if (currentOperator === '+') ans = n1 + n2;
+            else if (currentOperator === '-') ans = n1 - n2;
+            else if (currentOperator === '×') ans = n1 * n2;
+            else if (currentOperator === '÷') ans = Math.floor(n1 / n2);
+
+            let ansStr = ans.toString();
+
+            if (currentOperator === '÷') {
+                // わり算の商を自動セット
+                const parts = ansStr.split('');
+                divisionData.quotient = ['', '', ''];
+                for (let i = 0; i < parts.length; i++) {
+                    divisionData.quotient[3 - parts.length + i] = parts[i];
+                }
+            } else {
+                // ひっ算解答を右寄せ自動セット
+                const parts = ansStr.split('');
+                for (let c = 0; c < gridSize; c++) {
+                    const charIdx = parts.length - (gridSize - c);
+                    gridData[gridSize - 1][c] = charIdx >= 0 ? parts[charIdx] : '';
+                }
+            }
+
+            playSound('correct');
+            renderGrid();
+            addChatMessage('bot', `お助けボタンだね！答えは「${ansStr}」だよ。どうしてその計算になるか、ひっ算のやり方を一緒にみてみよう！`);
         }
 
         function checkCookieConsent() {
@@ -1218,12 +1469,15 @@
             const key = localStorage.getItem('zaqless_api_key');
             const statusText = document.getElementById('api-status-text');
             const statusBtn = document.getElementById('api-status-btn');
+            const aiBadge = document.getElementById('ai-badge');
             if (key) {
                 statusText.innerText = "AI有効";
                 statusBtn.className = "flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-[10px] font-bold border-2 border-emerald-300";
+                if (aiBadge) aiBadge.className = "absolute top-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse";
             } else {
                 statusText.innerText = "AI未設定";
                 statusBtn.className = "flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-bold border-2 border-rose-200";
+                if (aiBadge) aiBadge.className = "absolute top-0 right-0 w-4 h-4 bg-rose-500 rounded-full border-2 border-white animate-pulse";
             }
         }
 
@@ -1248,12 +1502,12 @@
         function addChatMessage(role, text) {
             const container = document.getElementById('chat-messages');
             const messageDiv = document.createElement('div');
-            messageDiv.className = "flex gap-2 items-start text-[10px] animate-pulse";
+            messageDiv.className = "flex gap-2 items-start text-[10px]";
             
             if (role === 'user') {
                 messageDiv.className = "flex gap-2 items-start text-[10px] justify-end";
                 messageDiv.innerHTML = `
-                    <div class="bg-indigo-600 text-white p-2.5 rounded-2xl rounded-tr-none leading-relaxed max-w-[85%] font-bold">
+                    <div class="bg-indigo-600 text-white p-2.5 rounded-2xl rounded-tl-2xl rounded-tr-none leading-relaxed max-w-[85%] font-bold animate-fade-in">
                         ${text}
                     </div>
                     <div class="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center shrink-0">🧒</div>
@@ -1261,1399 +1515,55 @@
             } else {
                 messageDiv.innerHTML = `
                     <div class="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center shrink-0 text-[9px]">🤖</div>
-                    <div class="bg-indigo-50 p-2.5 rounded-2xl rounded-tl-none text-indigo-900 leading-relaxed max-w-[85%] font-medium">
+                    <div class="bg-indigo-50 p-2.5 rounded-2xl rounded-tl-none rounded-tr-2xl text-indigo-900 leading-relaxed max-w-[85%] font-medium animate-fade-in">
                         ${text}
                     </div>
                 `;
             }
             container.appendChild(messageDiv);
             container.scrollTop = container.scrollHeight;
-            messageDiv.classList.remove('animate-pulse');
-        }
 
-        // 年齢（学年）に合わせた指導プロンプトの動的生成
-        async function callGeminiAI(userInput) {
-            const apiKey = localStorage.getItem('zaqless_api_key');
-            if (!apiKey) {
-                setTimeout(() => {
-                    addChatMessage('bot', `おっと、Gemini APIキーが設定されていないみたい！画面上の「AI未設定」ボタンをお父さん・お母さんにタップしてもらって、無料枠キーをセットしてみてね。どうしても設定方法がわからない場合は有人チャットスタッフがサポートします！`);
-                    playSound('incorrect');
-                }, 800);
-                return;
-            }
-
-            // ローディング
-            const container = document.getElementById('chat-messages');
-            const loadingDiv = document.createElement('div');
-            loadingDiv.id = "chat-loading";
-            loadingDiv.className = "flex gap-2 items-start text-[10px]";
-            loadingDiv.innerHTML = `
-                <div class="w-6 h-6 bg-indigo-400 rounded-full flex items-center justify-center shrink-0 animate-bounce">🤖</div>
-                <div class="bg-indigo-50/50 p-2.5 rounded-2xl rounded-tl-none text-indigo-400 max-w-[85%] flex items-center gap-1.5 font-bold">
-                    <span>Gemini先生が考えています</span>
-                    <span class="animate-ping text-indigo-500">...</span>
-                </div>
-            `;
-            container.appendChild(loadingDiv);
-            container.scrollTop = container.scrollHeight;
-
-            // 子どもの学年に応じた漢字使用量、解説スタイルの変更
-            const gradeLabels = ["小学1年", "小学2年", "小学3年", "小学4年", "小学5年以上"];
-            const selectedGradeLabel = gradeLabels[currentGrade - 1];
-
-            const systemPrompt = `
-あなたは算数ハイブリッド学習「ZaqLess（ザクレス）」のサポートAI「Gemini先生」です。
-ユーザーは【${selectedGradeLabel}】の小学生です。
-現在、ユーザーは画面上の問題を解いており、演算子は【${currentOperator}】です。
-途中計算やくり上がり・くり下がりのメモは、手元の「いらない紙（チラシの裏など）」にえんぴつで落書きしながら取り組んでいます。
-
-【あなたの役割】
-- ユーザーの年齢（学年：${selectedGradeLabel}）に適した、ひらがな多めの分かりやすい言葉遣い（特に小1〜2年は基本ひらがなで、小3〜4年は簡単な漢字を交えて）で語りかけてください。
-- 子どもが手元の紙に「10を借りた」「小さく1と書いた」「あまりを下に下ろした」などの落書き報告をしたとき、その行動を大げさに、最高のテンションで褒めてあげてください。（例：「紙に書くって最高！天才だよ！」「えんぴつの摩擦が脳に効いてるね！」）
-- 筆算のルールについて、答えを一発で教えるのではなく、一歩一歩「次はどこを計算するかな？」と対話で優しく引き出してください。
-- 1行〜3行程度の短い、親しみやすい文体で答えてください。
-`;
-
-            try {
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-                
-                chatHistory.push({ role: "user", parts: [{ text: userInput }] });
-                
-                const payload = {
-                    contents: chatHistory.map(h => ({
-                        role: h.role,
-                        parts: h.parts
-                    })),
-                    systemInstruction: {
-                        parts: [{ text: systemPrompt }]
-                    }
-                };
-
-                let response = null;
-                let delay = 1000;
-                for (let i = 0; i < 3; i++) {
-                    try {
-                        response = await fetch(apiUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-                        if (response.ok) break;
-                    } catch (e) {
-                        if (i === 2) throw e;
-                    }
-                    await new Promise(r => setTimeout(r, delay));
-                    delay *= 2; 
-                }
-
-                const result = await response.json();
-                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                const loader = document.getElementById('chat-loading');
-                if (loader) loader.remove();
-
-                if (text) {
-                    addChatMessage('bot', text);
-                    chatHistory.push({ role: "model", parts: [{ text: text }] });
-                    playSound('correct');
-                } else {
-                    addChatMessage('bot', "ごめんね、ちょっと電波がうまくいかなかったみたい。もう一回、紙に書いたことを教えてくれる？");
-                    playSound('incorrect');
-                }
-
-            } catch (err) {
-                const loader = document.getElementById('chat-loading');
-                if (loader) loader.remove();
-                addChatMessage('bot', "通信（つうしん）がうまくいかなかったみたい。APIキーが正しいかお父さん・お母さんに確認してみてね。");
-                playSound('incorrect');
+            // 履歴に保存 (AI送信用のフォーマット)
+            chatHistory.push({
+                role: role === 'user' ? 'user' : 'model',
+                parts: [{ text: text }]
+            });
+            // 履歴は最大20件まで保持
+            if (chatHistory.length > 20) {
+                chatHistory.shift();
             }
         }
 
-        // ひっ算のリセッ<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZaqLess（ザクレス）- ひっ算＆AI学習サポートシート</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=M+PLUS+Rounded+1c:wght@500;700;900&display=swap');
-        
-        body {
-            font-family: 'M PLUS Rounded 1c', 'Fredoka One', sans-serif;
-            touch-action: manipulation;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        .font-logo {
-            font-family: 'Fredoka One', sans-serif;
-        }
-
-        /* スクロールバーの非表示 */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        /* 選択されているマスの強調アニメーション */
-        @keyframes pulse-border {
-            0%, 100% { border-color: #4f46e5; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.4); }
-            50% { border-color: #818cf8; box-shadow: 0 0 0 5px rgba(129, 140, 248, 0.6); }
-        }
-        .active-cell {
-            animation: pulse-border 1s infinite ease-in-out;
-            background-color: #e0e7ff !important;
-        }
-
-        /* 手書きキャンバスの重ね合わせ調整 */
-        #canvas-container {
-            position: relative;
-        }
-        #drawing-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 30;
-            cursor: crosshair;
-        }
-    </style>
-</head>
-<body class="bg-indigo-50/20 text-slate-800 min-h-screen flex flex-col justify-between overflow-x-hidden">
-
-    <!-- クッキー同意バナー (指定文面) -->
-    <div id="cookie-banner" class="fixed bottom-4 left-4 right-4 md:left-auto md:max-w-md bg-slate-900 text-white p-4 rounded-2xl shadow-2xl border border-slate-700 z-50 transform translate-y-20 opacity-0 transition-all duration-500 flex flex-col sm:flex-row items-center gap-3">
-        <div class="flex-1 text-xs text-slate-300 leading-relaxed">
-            <p>当サイトでは、ユーザー体験の向上およびアクセス状況の分析を目的として、クッキーを使用しています。</p>
-        </div>
-        <button onclick="acceptCookies()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition-all text-white text-xs font-black rounded-xl shrink-0">
-            同意して閉じる
-        </button>
-    </div>
-
-    <!-- APIキー設定ダイアログ (BYOK) -->
-    <div id="api-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border-2 border-indigo-100 flex flex-col gap-4">
-            <div class="flex justify-between items-center">
-                <h3 class="font-bold text-base text-slate-800 flex items-center gap-2">
-                    <i data-lucide="key-round" class="text-indigo-600 w-5 h-5"></i>
-                    <span>Gemini APIキー設定</span>
-                </h3>
-                <button onclick="toggleApiModal(false)" class="p-1 text-slate-400 hover:text-slate-600">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            
-            <p class="text-xs text-slate-500 leading-relaxed">
-                ZaqLessでは、1対1のAI学習指導を誰もが無料で使えるように、おうちの「無料枠Gemini APIキー」を利用する仕組みを採用しています。設定はとても簡単です！
-            </p>
-
-            <div class="flex flex-col gap-1">
-                <label class="text-[10px] font-bold text-slate-500">APIキーを入力：</label>
-                <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:outline-none text-xs font-mono">
-            </div>
-
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[10px] text-slate-600 leading-relaxed flex flex-col gap-1">
-                <span class="font-bold text-amber-800 flex items-center gap-1">
-                    <i data-lucide="info" class="w-3.5 h-3.5 text-amber-600"></i>
-                    お父さん・お母さんへ
-                </span>
-                <p>Google AI Studioから無料で数クリックでキーを発行できます。</p>
-                <p class="text-indigo-600 font-bold">💡 「やり方がどうしてもわからない…」という場合は、ZaqLessスタッフが有人チャットで優しく設定をサポートしますのでご安心ください！</p>
-            </div>
-
-            <div class="flex gap-2">
-                <button onclick="toggleApiModal(false)" class="flex-1 py-2.5 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl active:scale-95 transition-transform">閉じる</button>
-                <button onclick="saveApiKey()" class="flex-1 py-2.5 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-md active:scale-95 transition-transform">保存して適用</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ヘッダー -->
-    <header class="bg-white border-b-4 border-indigo-100 px-4 py-3 sticky top-0 z-40 shadow-sm flex flex-col md:flex-row justify-between items-center gap-2">
-        <div class="flex items-center gap-2">
-            <div class="p-2 bg-indigo-100 text-indigo-600 rounded-xl">
-                <i data-lucide="layout-grid" class="w-5 h-5"></i>
-            </div>
-            <div>
-                <div class="flex items-center gap-1.5">
-                    <h1 class="text-sm font-logo tracking-wide text-indigo-600">ZaqLess</h1>
-                    <span class="text-[9px] bg-indigo-100 text-indigo-700 px-1.5 py-0.2 rounded-full font-bold">ひっ算</span>
-                </div>
-                <p class="text-[9px] text-slate-400">スマホでササッと入力、落書きは紙に！</p>
-            </div>
-        </div>
-
-        <!-- 学年セレクター (年齢に合わせて変更) -->
-        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-            <span class="text-[9px] font-bold text-slate-500 px-1">学年:</span>
-            <select id="grade-select" onchange="changeGrade(this.value)" class="bg-white text-xs font-bold text-indigo-700 border-none outline-none rounded-lg py-1 px-2 cursor-pointer shadow-sm">
-                <option value="1">小1 (かんたん)</option>
-                <option value="2" selected>小2 (ふつう)</option>
-                <option value="3">小3 (中ぐらい)</option>
-                <option value="4">小4 (むずかしい)</option>
-                <option value="5">小5・6 (超むずかしい)</option>
-            </select>
-        </div>
-
-        <div class="flex gap-1.5">
-            <button onclick="toggleApiModal(true)" id="api-status-btn" class="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-xl text-[10px] font-bold transition-all border border-slate-200">
-                <i data-lucide="bot" class="w-3.5 h-3.5"></i>
-                <span id="api-status-text">AI設定</span>
-            </button>
-            <button id="btn-reset" class="flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-[10px] font-bold transition-all">
-                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-                <span>リセット</span>
-            </button>
-        </div>
-    </header>
-
-    <!-- Web Audio API ピコピコシンセ音 -->
-    <script>
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        let audioCtx = null;
-
-        function playSound(type) {
-            try {
-                if (!audioCtx) audioCtx = new AudioContext();
-                if (!audioCtx) return;
-                
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                const now = audioCtx.currentTime;
-
-                if (type === 'tap') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(600, now);
-                    osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
-                    gain.gain.setValueAtTime(0.1, now);
-                    gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
-                    osc.start(now);
-                    osc.stop(now + 0.12);
-                } else if (type === 'correct') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(523.25, now); // C5
-                    osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
-                    osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
-                    osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
-                    gain.gain.setValueAtTime(0.15, now);
-                    gain.gain.linearRampToValueAtTime(0.15, now + 0.28);
-                    gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
-                    osc.start(now);
-                    osc.stop(now + 0.4);
-                } else if (type === 'incorrect') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(150, now);
-                    osc.frequency.setValueAtTime(120, now + 0.12);
-                    gain.gain.setValueAtTime(0.12, now);
-                    gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
-                    osc.start(now);
-                    osc.stop(now + 0.25);
-                }
-            } catch (e) {
-                console.log("Audio play blocked", e);
-            }
-        }
-    </script>
-
-    <!-- メインワークスペース (PC・タブレットではスクロールなし横並び、スマホでは縦積み) -->
-    <main class="flex-1 w-full max-w-7xl mx-auto px-4 py-4 flex flex-col lg:flex-row gap-4 items-stretch justify-center h-auto lg:h-[calc(100vh-140px)]">
-        
-        <!-- 左側：ひっ算ツール＆コントロール（主役） -->
-        <div class="flex-1 flex flex-col gap-3 min-w-0 h-full">
-            <!-- 相互作用モード & 問題自動生成 -->
-            <div class="flex flex-col sm:flex-row gap-2 shrink-0">
-                <div class="flex-1 bg-white p-1 rounded-2xl shadow-sm border-2 border-indigo-50 grid grid-cols-2 gap-1">
-                    <button id="mode-input-btn" onclick="switchInteractionMode('input')" class="py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border-2 border-indigo-600 bg-indigo-50 text-indigo-700">
-                        <i data-lucide="keyboard" class="w-4 h-4"></i>
-                        <span>① マス入力</span>
-                    </button>
-                    <button id="mode-draw-btn" onclick="switchInteractionMode('draw')" class="py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border-2 border-transparent bg-slate-50 text-slate-500">
-                        <i data-lucide="pencil" class="w-4 h-4"></i>
-                        <span>② 落書きメモ</span>
-                    </button>
-                </div>
-
-                <!-- 年齢・学年に合わせた自動出題ボタン -->
-                <button onclick="generateRandomProblem()" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-2xl shadow-md font-black text-xs flex items-center justify-center gap-2 transition-transform active:scale-95 shrink-0">
-                    <i data-lucide="shuffle" class="w-4 h-4 text-amber-300"></i>
-                    <span>もんだいを作る！</span>
-                </button>
-            </div>
-
-            <!-- コントロール群 (演算子＆桁数) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 shrink-0">
-                <!-- 演算子 -->
-                <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
-                    <div class="grid grid-cols-4 gap-1">
-                        <button onclick="setOperator('+')" id="op-add" class="op-btn py-1.5 rounded-lg font-bold text-xs border-2 border-indigo-500 bg-indigo-50 text-indigo-700 flex flex-col items-center">
-                            <span class="text-sm">＋</span>
-                            <span class="text-[8px] font-normal scale-90">たし算</span>
-                        </button>
-                        <button onclick="setOperator('-')" id="op-sub" class="op-btn py-1.5 rounded-lg font-bold text-xs border border-slate-200 bg-white text-slate-500 flex flex-col items-center">
-                            <span class="text-sm">－</span>
-                            <span class="text-[8px] font-normal scale-90">ひき算</span>
-                        </button>
-                        <button onclick="setOperator('×')" id="op-mul" class="op-btn py-1.5 rounded-lg font-bold text-xs border border-slate-200 bg-white text-slate-500 flex flex-col items-center">
-                            <span class="text-sm">×</span>
-                            <span class="text-[8px] font-normal scale-90">かけ算</span>
-                        </button>
-                        <button onclick="setOperator('÷')" id="op-div" class="op-btn py-1.5 rounded-lg font-bold text-xs border border-slate-200 bg-white text-slate-500 flex flex-col items-center">
-                            <span class="text-sm">÷</span>
-                            <span class="text-[8px] font-normal scale-90">わり算</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 桁数 -->
-                <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                    <span class="text-[10px] font-bold text-slate-500 flex items-center gap-1 pl-1">
-                        <i data-lucide="sliders" class="w-3.5 h-3.5 text-indigo-500"></i>
-                        マス目のサイズ
-                    </span>
-                    <div class="flex gap-1" id="grid-size-controls">
-                        <button onclick="changeGridSize(3)" id="size-3" class="size-btn px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 bg-white">3×3</button>
-                        <button onclick="changeGridSize(4)" id="size-4" class="size-btn px-2.5 py-1 text-xs font-bold rounded-lg border-2 border-indigo-500 bg-indigo-50 text-indigo-700">4×4</button>
-                        <button onclick="changeGridSize(5)" id="size-5" class="size-btn px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 bg-white">5×5</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- メインひっ算ボード -->
-            <div id="canvas-container" class="bg-white rounded-3xl shadow-sm border-2 border-indigo-50 flex flex-col items-center justify-center min-h-[340px] relative overflow-hidden flex-1">
-                <!-- 手書きCanvas -->
-                <canvas id="drawing-canvas" class="pointer-events-none opacity-0 transition-opacity duration-200"></canvas>
-
-                <!-- 手書きツールバー -->
-                <div id="draw-tools" class="absolute top-2 right-2 flex gap-1 z-40 hidden">
-                    <button id="tool-pen" onclick="setDrawTool('pen')" class="p-2 bg-indigo-600 text-white rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md">
-                        <i data-lucide="pencil" class="w-3 h-3"></i>
-                        <span>赤ペン</span>
-                    </button>
-                    <button id="tool-eraser" onclick="setDrawTool('eraser')" class="p-2 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md hover:bg-slate-200">
-                        <i data-lucide="eraser" class="w-3 h-3"></i>
-                        <span>消しゴム</span>
-                    </button>
-                    <button onclick="clearCanvas()" class="p-2 bg-rose-100 text-rose-700 rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md hover:bg-rose-200">
-                        <i data-lucide="trash-2" class="w-3 h-3"></i>
-                        <span>メモ消去</span>
-                    </button>
-                </div>
-
-                <!-- ガイド説明 -->
-                <div id="top-guide-text" class="absolute top-2 left-3 flex items-center gap-1 text-[10px] text-slate-400 z-10 font-bold">
-                    <i data-lucide="info" class="w-3.5 h-3.5"></i>
-                    <span id="guide-message-text">青いマスをえらんで、下のキーボードで数字を入れてね</span>
-                </div>
-
-                <!-- 標準のひっ算（足し、引き、掛け算） -->
-                <div id="standard-calc-grid" class="flex flex-col items-end gap-1.5 my-8 select-none z-10 transition-all">
-                    <!-- ここに動的にマス目が生成されます -->
-                </div>
-
-                <!-- わり算のひっ算 -->
-                <div id="division-calc-grid" class="hidden flex-col items-start gap-1.5 my-8 select-none z-10 transition-all">
-                    <!-- ここにわり算用の特別なグリッドが生成されます -->
-                </div>
-
-                <!-- 桁数ヘルパー -->
-                <div id="digit-helper" class="mb-4 text-[10px] text-slate-500 bg-slate-100 px-3 py-1 rounded-full flex gap-2 items-center z-10 font-bold shrink-0">
-                    <span>👈️ こっちが「一のくらい」だよ</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 右側：AIおしゃべりバディ「Gemini先生」 & ソフトウェアテンキー (大画面時は右側に縦積み) -->
-        <div class="w-full lg:w-[380px] flex flex-col gap-3 shrink-0 h-full justify-between">
-            
-            <!-- Gemini先生チャットボード -->
-            <div class="bg-white rounded-3xl border-2 border-indigo-100/50 shadow-sm p-4 flex flex-col justify-between flex-1 min-h-[300px]">
-                <!-- チャットヘッダー -->
-                <div class="flex items-center justify-between border-b border-indigo-50 pb-3">
-                    <div class="flex items-center gap-2">
-                        <div class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-lg shadow-sm">🤖</div>
-                        <div>
-                            <div class="flex items-center gap-1">
-                                <h3 class="text-xs font-black text-slate-800">Gemini先生</h3>
-                                <span class="text-[8px] bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded-full font-bold">BYOK</span>
-                            </div>
-                            <p class="text-[9px] text-slate-400">紙への落書きを一緒に楽しむバディ</p>
-                        </div>
-                    </div>
-                    <button onclick="toggleApiModal(true)" class="text-[9px] text-indigo-600 hover:underline font-bold">
-                        [キー変更]
-                    </button>
-                </div>
-
-                <!-- チャット履歴エリア -->
-                <div id="chat-messages" class="flex-1 overflow-y-auto py-3 flex flex-col gap-3 no-scrollbar max-h-[160px] lg:max-h-[220px]">
-                    <!-- 初期メッセージ -->
-                    <div class="flex gap-2 items-start text-[10px]">
-                        <div class="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center shrink-0">🤖</div>
-                        <div class="bg-indigo-50 p-2.5 rounded-2xl rounded-tl-none text-indigo-900 leading-relaxed max-w-[85%] font-medium">
-                            こんにちは！ZaqLessへようこそ！<br>
-                            問題は「もんだいを作る！」から自動で作れるよ。計算メモは手元のいらない紙に自由に書いてね！<br>
-                            <span class="text-indigo-600 font-bold">紙にメモを書いたら、下のボタンから教えてね！</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- クイック落書き報告ボタン -->
-                <div class="border-t border-indigo-50 pt-2 flex flex-col gap-1 shrink-0">
-                    <span class="text-[8px] font-bold text-slate-400 pl-1 uppercase tracking-wider">紙への落書きを報告する：</span>
-                    <div class="grid grid-cols-2 gap-1 text-[9px] font-bold">
-                        <button onclick="sendQuickReport('10借りて斜め線引いた！')" class="quick-btn py-1.5 px-1 border border-indigo-100 rounded-xl bg-indigo-50/50 text-indigo-700 hover:bg-indigo-50 active:scale-95 transition-all text-center">
-                            ✏️ 10を借りた！
-                        </button>
-                        <button onclick="sendQuickReport('くり上がりの1を書いた')" class="quick-btn py-1.5 px-1 border border-indigo-100 rounded-xl bg-indigo-50/50 text-indigo-700 hover:bg-indigo-50 active:scale-95 transition-all text-center">
-                            ✏️ 繰り上がりの1
-                        </button>
-                        <button onclick="sendQuickReport('あまりの数字を下ろしたよ')" class="quick-btn py-1.5 px-1 border border-indigo-100 rounded-xl bg-indigo-50/50 text-indigo-700 hover:bg-indigo-50 active:scale-95 transition-all text-center">
-                            ✏️ あまりを下ろした
-                        </button>
-                        <button onclick="sendQuickReport('計算方法がわからなくなっちゃった')" class="quick-btn py-1.5 px-1 border border-rose-100 rounded-xl bg-rose-50/50 text-rose-700 hover:bg-rose-50 active:scale-95 transition-all text-center">
-                            ❓️ わからない！
-                        </button>
-                    </div>
-                </div>
-
-                <!-- チャット入力欄 -->
-                <div class="mt-2 pt-2 border-t border-indigo-50 flex gap-1.5 items-center shrink-0">
-                    <input type="text" id="chat-input" placeholder="Gemini先生に直接質問..." class="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-[10px] focus:outline-none focus:border-indigo-500">
-                    <button onclick="sendCustomMessage()" class="p-2 bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition-all text-white rounded-xl shadow-md">
-                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- ソフトウェアキーボード (スマホでは最下部、PC/タブレットでは右下サイドに統合可能) -->
-            <div id="keyboard-footer" class="bg-slate-100 border border-slate-300 p-2 rounded-2xl transition-all shrink-0">
-                <div class="flex flex-col gap-1">
-                    <!-- キーボード上部のアクション -->
-                    <div class="flex justify-between items-center px-1">
-                        <span class="text-[9px] font-bold text-slate-500 flex items-center gap-1">
-                            <i data-lucide="keyboard" class="w-3.5 h-3.5 text-indigo-500"></i>
-                            <span id="keyboard-target-label">ますめを選んでね</span>
-                        </span>
-                        <div class="flex gap-1 scale-90">
-                            <button onclick="moveSelection('left')" class="p-1 bg-white active:bg-slate-200 border border-slate-300 rounded shadow-sm text-slate-700"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i></button>
-                            <button onclick="moveSelection('right')" class="p-1 bg-white active:bg-slate-200 border border-slate-300 rounded shadow-sm text-slate-700"><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></button>
-                            <button onclick="moveSelection('up')" class="p-1 bg-white active:bg-slate-200 border border-slate-300 rounded shadow-sm text-slate-700"><i data-lucide="arrow-up" class="w-3.5 h-3.5"></i></button>
-                            <button onclick="moveSelection('down')" class="p-1 bg-white active:bg-slate-200 border border-slate-300 rounded shadow-sm text-slate-700"><i data-lucide="arrow-down" class="w-3.5 h-3.5"></i></button>
-                        </div>
-                    </div>
-
-                    <!-- キーパッド本体 -->
-                    <div class="grid grid-cols-4 gap-1 text-xs">
-                        <button onclick="pressKey('1')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">1</button>
-                        <button onclick="pressKey('2')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">2</button>
-                        <button onclick="pressKey('3')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">3</button>
-                        
-                        <!-- クリアキー -->
-                        <button onclick="pressKey('clear')" class="row-span-2 py-2 bg-rose-500 active:bg-rose-600 text-white font-bold rounded shadow-sm flex flex-col items-center justify-center gap-0.5">
-                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                            <span class="text-[8px]">けす</span>
-                        </button>
-
-                        <button onclick="pressKey('4')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">4</button>
-                        <button onclick="pressKey('5')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">5</button>
-                        <button onclick="pressKey('6')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">6</button>
-
-                        <button onclick="pressKey('7')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">7</button>
-                        <button onclick="pressKey('8')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">8</button>
-                        <button onclick="pressKey('9')" class="py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">9</button>
-
-                        <!-- バックスペース -->
-                        <button onclick="pressKey('backspace')" class="py-2 bg-slate-200 active:bg-slate-300 text-slate-800 font-bold rounded shadow-sm flex items-center justify-center">
-                            <i data-lucide="delete" class="w-3.5 h-3.5"></i>
-                        </button>
-
-                        <!-- 0 -->
-                        <button onclick="pressKey('0')" class="col-span-2 py-2 bg-white active:bg-slate-200 border border-slate-300 font-black rounded shadow-sm">0</button>
-                        
-                        <!-- 小数点 / ドット -->
-                        <button onclick="pressKey('.')" class="py-2 bg-slate-200 active:bg-slate-300 text-slate-700 font-bold rounded shadow-sm">.</button>
-
-                        <!-- 進む -->
-                        <button onclick="pressKey('next')" class="col-span-4 py-1.5 bg-indigo-600 active:bg-indigo-700 text-white font-bold text-[10px] rounded shadow-sm flex items-center justify-center gap-1">
-                            <span>つぎのマス</span>
-                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </main>
-
-    <!-- システムコアースクリプト -->
-    <script>
-        let currentOperator = '+'; 
-        let gridSize = 4; 
-        let activeCell = null; 
-        let interactionMode = 'input'; 
-        let activeDrawTool = 'pen'; 
-        let currentGrade = 2; // 1: 小1, 2: 小2, 3: 小3, 4: 小4, 5: 小5以上
-        
-        let gridData = [];
-        let carryData = [];
-
-        let divisionData = {
-            dividend: ['', '', ''],
-            divisor: ['', ''],
-            quotient: ['', '', ''],
-            steps: [
-                { sub: ['', '', ''], rem: ['', '', ''] },
-                { sub: ['', '', ''], rem: ['', '', ''] },
-                { sub: ['', '', ''], rem: ['', '', ''] }
-            ]
-        };
-
-        const canvas = document.getElementById('drawing-canvas');
-        const ctx = canvas.getContext('2d');
-        let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
-
-        const standardGridEl = document.getElementById('standard-calc-grid');
-        const divisionGridEl = document.getElementById('division-calc-grid');
-        const digitHelper = document.getElementById('digit-helper');
-        const keyboardTargetLabel = document.getElementById('keyboard-target-label');
-        const sizeControls = document.getElementById('grid-size-controls');
-
-        const modeInputBtn = document.getElementById('mode-input-btn');
-        const modeDrawBtn = document.getElementById('mode-draw-btn');
-        const drawTools = document.getElementById('draw-tools');
-        const topGuideText = document.getElementById('top-guide-text');
-        const guideMessageText = document.getElementById('guide-message-text');
-        const keyboardFooter = document.getElementById('keyboard-footer');
-
-        window.onload = function() {
-            lucide.createIcons();
-            initGrid();
-            renderGrid();
-            initCanvas();
-            checkCookieConsent();
-            checkApiKeyOnLoad();
-            generateRandomProblem(); // 初期起動時に難易度に合わせた問題をセット
-
-            // 物理キーボードの連動設定
-            window.addEventListener('keydown', handlePhysicalKeyboard);
-        };
-
-        function initCanvas() {
-            const resizeCanvas = () => {
-                const rect = canvas.getBoundingClientRect();
-                canvas.width = rect.width;
-                canvas.height = rect.height;
-                setDrawTool(activeDrawTool);
-            };
-            
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
-
-            const getPos = (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                return {
-                    x: clientX - rect.left,
-                    y: clientY - rect.top
-                };
-            };
-
-            const startDraw = (e) => {
-                if (interactionMode !== 'draw') return;
-                isDrawing = true;
-                const pos = getPos(e);
-                lastX = pos.x;
-                lastY = pos.y;
-            };
-
-            const draw = (e) => {
-                if (!isDrawing || interactionMode !== 'draw') return;
-                e.preventDefault();
-                const pos = getPos(e);
-                
-                ctx.beginPath();
-                ctx.moveTo(lastX, lastY);
-                ctx.lineTo(pos.x, pos.y);
-                ctx.stroke();
-                
-                lastX = pos.x;
-                lastY = pos.y;
-            };
-
-            const stopDraw = () => { isDrawing = false; };
-
-            canvas.addEventListener('mousedown', startDraw);
-            canvas.addEventListener('mousemove', draw);
-            canvas.addEventListener('mouseup', stopDraw);
-            canvas.addEventListener('mouseout', stopDraw);
-
-            canvas.addEventListener('touchstart', startDraw, { passive: false });
-            canvas.addEventListener('touchmove', draw, { passive: false });
-            canvas.addEventListener('touchend', stopDraw);
-        }
-
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function resetAll() {
             playSound('tap');
-        }
-
-        function setDrawTool(tool) {
-            activeDrawTool = tool;
-            const penBtn = document.getElementById('tool-pen');
-            const eraserBtn = document.getElementById('tool-eraser');
-            if (!penBtn || !eraserBtn) return;
-
-            if (tool === 'pen') {
-                penBtn.className = "p-2 bg-indigo-600 text-white rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md";
-                eraserBtn.className = "p-2 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md hover:bg-slate-200";
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.strokeStyle = '#e11d48'; 
-                ctx.lineWidth = 3;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-            } else {
-                penBtn.className = "p-2 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md hover:bg-slate-200";
-                eraserBtn.className = "p-2 bg-indigo-600 text-white rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md";
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.lineWidth = 15;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-            }
-        }
-
-        function switchInteractionMode(mode) {
-            interactionMode = mode;
-            playSound('tap');
-
-            if (mode === 'draw') {
-                modeDrawBtn.className = "py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border-2 border-indigo-600 bg-indigo-50 text-indigo-700";
-                modeInputBtn.className = "py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border-2 border-transparent bg-slate-50 text-slate-500";
-                canvas.classList.remove('pointer-events-none', 'opacity-0');
-                canvas.classList.add('pointer-events-auto', 'opacity-100');
-                drawTools.classList.remove('hidden');
-                guideMessageText.innerText = "✏️ メモ落書き：指やペンで紙と同じように、くり下がりの斜め線や途中計算を自由に書けるよ！";
-                topGuideText.className = "absolute top-2 left-3 flex items-center gap-1 text-[10px] text-amber-700 z-50 font-bold";
-                keyboardFooter.classList.add('opacity-40', 'pointer-events-none');
-                activeCell = null;
-                renderGrid();
-            } else {
-                modeInputBtn.className = "py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border-2 border-indigo-600 bg-indigo-50 text-indigo-700";
-                modeDrawBtn.className = "py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border-2 border-transparent bg-slate-50 text-slate-500";
-                canvas.classList.add('pointer-events-none', 'opacity-0');
-                canvas.classList.remove('pointer-events-auto', 'opacity-100');
-                drawTools.classList.add('hidden');
-                guideMessageText.innerText = "青いマスをえらんで、下のキーボードで数字を入れてね";
-                topGuideText.className = "absolute top-2 left-3 flex items-center gap-1 text-[10px] text-slate-400 z-10 font-bold";
-                keyboardFooter.classList.remove('opacity-40', 'pointer-events-none');
-                setDrawTool('pen');
-                updateKeyboardLabel();
-                renderGrid();
-            }
-        }
-
-        function initGrid() {
-            gridData = [];
-            carryData = [];
-            for (let r = 0; r < gridSize; r++) {
-                let row = [];
-                for (let c = 0; c < gridSize; c++) row.push('');
-                gridData.push(row);
-            }
-            for (let c = 0; c < gridSize; c++) carryData.push('');
-
-            divisionData = {
-                dividend: ['', '', ''],
-                divisor: ['', ''],
-                quotient: ['', '', ''],
-                steps: [
-                    { sub: ['', '', ''], rem: ['', '', ''] },
-                    { sub: ['', '', ''], rem: ['', '', ''] },
-                    { sub: ['', '', ''], rem: ['', '', ''] }
-                ]
-            };
-        }
-
-        // 学年と演算子に応じた難易度の自動問題生成システム
-        function changeGrade(val) {
-            currentGrade = parseInt(val, 10);
-            playSound('tap');
-            generateRandomProblem();
-        }
-
-        function generateRandomProblem() {
             initGrid();
             clearCanvas();
-            
-            let num1 = 0;
-            let num2 = 0;
-
-            if (currentOperator === '+') {
-                if (currentGrade === 1) {
-                    // 小1: 1桁〜2桁 (繰り上がりなし中心)
-                    num1 = Math.floor(Math.random() * 8) + 2; 
-                    num2 = Math.floor(Math.random() * 7) + 1;
-                } else if (currentGrade === 2) {
-                    // 小2: 2桁＋2桁 (繰り上がりあり)
-                    num1 = Math.floor(Math.random() * 80) + 15;
-                    num2 = Math.floor(Math.random() * 80) + 15;
-                } else if (currentGrade === 3) {
-                    // 小3: 3桁＋3桁
-                    num1 = Math.floor(Math.random() * 800) + 150;
-                    num2 = Math.floor(Math.random() * 800) + 150;
-                } else {
-                    // 小4以上: 4桁、または小数
-                    num1 = Math.floor(Math.random() * 8000) + 1000;
-                    num2 = Math.floor(Math.random() * 8000) + 1000;
-                    if (currentGrade === 5) {
-                        // 小数点ありに改変
-                        num1 = (num1 / 100).toFixed(2);
-                        num2 = (num2 / 100).toFixed(2);
-                    }
-                }
-                setProblemToStandardGrid(num1.toString(), num2.toString());
-
-            } else if (currentOperator === '-') {
-                if (currentGrade === 1) {
-                    // 小1: 1桁〜2桁の引き算
-                    num1 = Math.floor(Math.random() * 9) + 6;
-                    num2 = Math.floor(Math.random() * (num1 - 2)) + 1;
-                } else if (currentGrade === 2) {
-                    // 小2: 2桁ひき算 (繰り下がりあり)
-                    num1 = Math.floor(Math.random() * 70) + 30;
-                    num2 = Math.floor(Math.random() * (num1 - 10)) + 9;
-                } else if (currentGrade === 3) {
-                    // 小3: 3桁ひき算
-                    num1 = Math.floor(Math.random() * 700) + 300;
-                    num2 = Math.floor(Math.random() * (num1 - 100)) + 99;
-                } else {
-                    // 小4以上: 4桁、または小数
-                    num1 = Math.floor(Math.random() * 7000) + 3000;
-                    num2 = Math.floor(Math.random() * (num1 - 1000)) + 999;
-                    if (currentGrade === 5) {
-                        num1 = (num1 / 100).toFixed(2);
-                        num2 = (num2 / 100).toFixed(2);
-                    }
-                }
-                setProblemToStandardGrid(num1.toString(), num2.toString());
-
-            } else if (currentOperator === '×') {
-                if (currentGrade === 1 || currentGrade === 2) {
-                    // かけ算入門: 1桁×1桁 (九九)
-                    num1 = Math.floor(Math.random() * 8) + 2;
-                    num2 = Math.floor(Math.random() * 8) + 2;
-                } else if (currentGrade === 3) {
-                    // 小3: 2桁×1桁 または 2桁×2桁
-                    num1 = Math.floor(Math.random() * 80) + 12;
-                    num2 = Math.floor(Math.random() * 8) + 2;
-                } else {
-                    // 小4以上: 3桁×2桁
-                    num1 = Math.floor(Math.random() * 800) + 100;
-                    num2 = Math.floor(Math.random() * 80) + 12;
-                }
-                setProblemToStandardGrid(num1.toString(), num2.toString());
-
-            } else if (currentOperator === '÷') {
-                // わり算 (特別なわり算筆算ボード用)
-                if (currentGrade <= 2) {
-                    // わり算基礎
-                    num2 = Math.floor(Math.random() * 7) + 2; 
-                    const tempQuotient = Math.floor(Math.random() * 8) + 2;
-                    num1 = num2 * tempQuotient; 
-                } else if (currentGrade === 3) {
-                    // 小3: あまりありわり算
-                    num2 = Math.floor(Math.random() * 8) + 2;
-                    num1 = Math.floor(Math.random() * 80) + 10;
-                } else {
-                    // 小4以上: 3桁÷2桁など
-                    num2 = Math.floor(Math.random() * 15) + 6;
-                    num1 = Math.floor(Math.random() * 200) + 50;
-                }
-                setProblemToDivisionGrid(num1.toString(), num2.toString());
-            }
-
-            activeCell = null;
-            renderGrid();
-            playSound('correct');
-        }
-
-        // 割り算グリッドへの問題自動セット
-        function setProblemToDivisionGrid(num1Str, num2Str) {
-            // 被除数 (最大3桁)
-            const dividendParts = num1Str.split('');
-            for (let i = 0; i < 3; i++) {
-                divisionData.dividend[i] = dividendParts[i] || '';
-            }
-            // 除数 (最大2桁)
-            const divisorParts = num2Str.split('');
-            for (let i = 0; i < 2; i++) {
-                divisionData.divisor[i] = divisorParts[i] || '';
-            }
-        }
-
-        // 通常の筆算グリッドへの問題自動セット
-        function setProblemToStandardGrid(num1Str, num2Str) {
-            // グリッドサイズを桁数に応じて最適化
-            const maxLen = Math.max(num1Str.length, num2Str.length);
-            if (maxLen >= 5) {
-                changeGridSizeWithoutReset(5);
-            } else if (maxLen >= 4) {
-                changeGridSizeWithoutReset(4);
-            } else {
-                changeGridSizeWithoutReset(3);
-            }
-
-            // 1行目に数値1を右寄せで配置
-            const num1Parts = num1Str.split('');
-            for (let c = 0; c < gridSize; c++) {
-                const charIdx = num1Parts.length - (gridSize - c);
-                gridData[0][c] = charIdx >= 0 ? num1Parts[charIdx] : '';
-            }
-
-            // 2行目に数値2を右寄せで配置
-            const num2Parts = num2Str.split('');
-            for (let c = 0; c < gridSize; c++) {
-                const charIdx = num2Parts.length - (gridSize - c);
-                gridData[1][c] = charIdx >= 0 ? num2Parts[charIdx] : '';
-            }
-
-            // 答えのマス(3行目以降)を空にしてユーザーが解く状態にする
-            for (let r = 2; r < gridSize; r++) {
-                for (let c = 0; c < gridSize; c++) {
-                    gridData[r][c] = '';
-                }
-            }
-        }
-
-        function changeGridSizeWithoutReset(size) {
-            gridSize = size;
-            document.querySelectorAll('.size-btn').forEach(btn => {
-                btn.classList.remove('border-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'border-2');
-                btn.classList.add('border-slate-200', 'bg-white', 'text-slate-500');
-            });
-            const sizeBtn = document.getElementById(`size-${size}`);
-            if (sizeBtn) {
-                sizeBtn.className = "size-btn px-2.5 py-1 text-xs font-bold rounded-lg border-2 border-indigo-500 bg-indigo-50 text-indigo-700";
-            }
-            initGrid();
-        }
-
-        function setOperator(op) {
-            currentOperator = op;
-            playSound('tap');
-            document.querySelectorAll('.op-btn').forEach(btn => {
-                btn.classList.remove('border-indigo-500', 'bg-indigo-50', 'text-indigo-700');
-                btn.classList.add('border-slate-200', 'bg-white', 'text-slate-500');
-            });
-
-            let activeBtnId = 'op-add';
-            if (op === '-') activeBtnId = 'op-sub';
-            if (op === '×') activeBtnId = 'op-mul';
-            if (op === '÷') activeBtnId = 'op-div';
-            const targetBtn = document.getElementById(activeBtnId);
-            if (targetBtn) {
-                targetBtn.className = "op-btn py-1.5 rounded-lg font-bold text-xs border-2 border-indigo-500 bg-indigo-50 text-indigo-700 flex flex-col items-center";
-            }
-
-            if (op === '÷') {
-                sizeControls.classList.add('hidden');
-            } else {
-                sizeControls.classList.remove('hidden');
-            }
-
-            generateRandomProblem();
-        }
-
-        function changeGridSize(size) {
-            changeGridSizeWithoutReset(size);
-            generateRandomProblem();
-        }
-
-        function renderGrid() {
-            if (currentOperator === '÷') {
-                standardGridEl.classList.add('hidden');
-                divisionGridEl.classList.remove('hidden');
-                digitHelper.classList.add('hidden');
-                renderDivisionGrid();
-            } else {
-                standardGridEl.classList.remove('hidden');
-                divisionGridEl.classList.add('hidden');
-                digitHelper.classList.remove('hidden');
-                renderStandardGrid();
-            }
-        }
-
-        function renderStandardGrid() {
-            standardGridEl.innerHTML = '';
-            
-            // くり上がり行
-            const carryRowDiv = document.createElement('div');
-            carryRowDiv.className = "flex gap-1.5 items-center mb-1 justify-end w-full";
-            for (let c = 0; c < gridSize; c++) {
-                const container = document.createElement('div');
-                container.className = "w-10 h-10 flex items-center justify-center";
-                const cellVal = carryData[c];
-                const cellBtn = document.createElement('button');
-                
-                let baseStyle = "w-7 h-7 text-center font-bold text-xs rounded-full border-2 flex items-center justify-center transition-all focus:outline-none ";
-                if (cellVal !== '') {
-                    baseStyle += "bg-amber-100 border-amber-400 text-amber-800";
-                } else {
-                    baseStyle += "bg-slate-50 border-dashed border-slate-300 text-slate-300";
-                }
-                cellBtn.className = baseStyle;
-                cellBtn.innerText = cellVal || '';
-                if (!cellVal) {
-                    cellBtn.innerHTML = `<span class="text-[8px] text-slate-300 scale-90">くり</span>`;
-                }
-
-                if (activeCell && activeCell.type === 'carry' && activeCell.col === c) {
-                    cellBtn.className = "w-7 h-7 text-center font-bold text-xs rounded-full border-2 flex items-center justify-center focus:outline-none active-cell";
-                }
-                if (interactionMode === 'draw') cellBtn.classList.add('pointer-events-none', 'opacity-70');
-
-                const colIdx = c;
-                cellBtn.onclick = (e) => { e.stopPropagation(); selectCell('carry', -1, colIdx); };
-                container.appendChild(cellBtn);
-                carryRowDiv.appendChild(container);
-            }
-            standardGridEl.appendChild(carryRowDiv);
-
-            const underlineRow = gridSize - 2;
-
-            // メイン行
-            for (let r = 0; r < gridSize; r++) {
-                const rowDiv = document.createElement('div');
-                rowDiv.className = "flex gap-1.5 items-center relative";
-
-                if (r === underlineRow) {
-                    const opSign = document.createElement('div');
-                    opSign.className = "absolute -left-7 font-black text-lg text-indigo-600 w-6 text-center select-none";
-                    opSign.innerText = currentOperator;
-                    rowDiv.appendChild(opSign);
-                }
-
-                for (let c = 0; c < gridSize; c++) {
-                    const cellVal = gridData[r][c];
-                    const cellBtn = document.createElement('button');
-                    
-                    let baseStyle = "w-10 h-10 text-center font-extrabold text-lg rounded-xl border-2 flex items-center justify-center transition-all focus:outline-none ";
-                    if (r >= underlineRow + 1) {
-                        baseStyle += "bg-emerald-50 border-emerald-300 text-emerald-900";
-                    } else {
-                        baseStyle += "bg-white border-slate-300 text-slate-800";
-                    }
-                    cellBtn.className = baseStyle;
-                    cellBtn.innerText = cellVal;
-
-                    if (activeCell && activeCell.type === 'grid' && activeCell.row === r && activeCell.col === c) {
-                        cellBtn.classList.add('active-cell');
-                    }
-                    if (interactionMode === 'draw') cellBtn.classList.add('pointer-events-none', 'opacity-80');
-
-                    const rowIdx = r;
-                    const colIdx = c;
-                    cellBtn.onclick = (e) => { e.stopPropagation(); selectCell('grid', rowIdx, colIdx); };
-                    rowDiv.appendChild(cellBtn);
-                }
-
-                if (r === underlineRow) {
-                    const line = document.createElement('div');
-                    line.className = "w-full h-[3px] bg-slate-700 rounded-full my-1";
-                    standardGridEl.appendChild(rowDiv);
-                    standardGridEl.appendChild(line);
-                } else {
-                    standardGridEl.appendChild(rowDiv);
-                }
-            }
-            updateDigitHelper();
-        }
-
-        function renderDivisionGrid() {
-            divisionGridEl.innerHTML = '';
-            const container = document.createElement('div');
-            container.className = "flex flex-col items-start gap-1.5 p-1";
-
-            // 1行目: 商
-            const rowQuotient = document.createElement('div');
-            rowQuotient.className = "flex gap-1.5 items-center pl-[48px]";
-            for (let i = 0; i < 3; i++) {
-                rowQuotient.appendChild(createDivCell('quotient', 0, i, 'bg-emerald-50 border-emerald-300 text-emerald-800'));
-            }
-            container.appendChild(rowQuotient);
-
-            // 2行目
-            const rowMain = document.createElement('div');
-            rowMain.className = "flex items-center gap-1.5";
-            const divDivisor = document.createElement('div');
-            divDivisor.className = "flex gap-1.5";
-            divDivisor.appendChild(createDivCell('divisor', 0, 0, 'bg-white border-slate-300'));
-            divDivisor.appendChild(createDivCell('divisor', 0, 1, 'bg-white border-slate-300'));
-            rowMain.appendChild(divDivisor);
-
-            const symbol = document.createElement('div');
-            symbol.className = "h-10 flex items-center justify-center font-light text-2xl text-slate-500 px-0.5 border-l-[3px] border-t-[3px] border-slate-700 rounded-tl-2xl ml-1 -mr-1 pt-1 w-4";
-            rowMain.appendChild(symbol);
-
-            const divDividend = document.createElement('div');
-            divDividend.className = "flex gap-1.5";
-            for (let i = 0; i < 3; i++) {
-                divDividend.appendChild(createDivCell('dividend', 0, i, 'bg-white border-slate-300'));
-            }
-            rowMain.appendChild(divDividend);
-            container.appendChild(rowMain);
-
-            const mainLine = document.createElement('div');
-            mainLine.className = "h-[3px] bg-slate-700 rounded-full ml-[48px] w-[124px] my-1";
-            container.appendChild(mainLine);
-
-            // 3行目以降：途中計算
-            for (let s = 0; s < 3; s++) {
-                const rowSub = document.createElement('div');
-                rowSub.className = "flex gap-1.5 items-center pl-[48px] relative";
-                const minusSign = document.createElement('span');
-                minusSign.className = "text-[10px] font-black text-slate-400 absolute left-2";
-                minusSign.innerText = "－";
-                rowSub.appendChild(minusSign);
-
-                for (let i = 0; i < 3; i++) {
-                    rowSub.appendChild(createDivCell(`step-sub-${s}`, s, i, 'bg-orange-50/50 border-orange-200 text-orange-900'));
-                }
-                container.appendChild(rowSub);
-
-                const subLine = document.createElement('div');
-                subLine.className = "h-[1.5px] bg-slate-400 rounded ml-[48px] w-[124px] my-0.5";
-                container.appendChild(subLine);
-
-                const rowRem = document.createElement('div');
-                rowRem.className = "flex gap-1.5 items-center pl-[48px]";
-                for (let i = 0; i < 3; i++) {
-                    rowRem.appendChild(createDivCell(`step-rem-${s}`, s, i, 'bg-white border-slate-300'));
-                }
-                container.appendChild(rowRem);
-            }
-            divisionGridEl.appendChild(container);
-        }
-
-        function createDivCell(type, index, pos, colorClasses) {
-            const btn = document.createElement('button');
-            btn.className = `w-9 h-9 text-center font-extrabold text-base rounded-lg border-2 flex items-center justify-center transition-all focus:outline-none ${colorClasses}`;
-            
-            let val = '';
-            if (type === 'quotient') val = divisionData.quotient[pos];
-            else if (type === 'divisor') val = divisionData.divisor[pos];
-            else if (type === 'dividend') val = divisionData.dividend[pos];
-            else if (type.startsWith('step-sub-')) val = divisionData.steps[index].sub[pos];
-            else if (type.startsWith('step-rem-')) val = divisionData.steps[index].rem[pos];
-
-            btn.innerText = val;
-            if (activeCell && activeCell.type === type && activeCell.row === index && activeCell.col === pos) {
-                btn.classList.add('active-cell');
-            }
-            if (interactionMode === 'draw') btn.classList.add('pointer-events-none', 'opacity-80');
-
-            btn.onclick = (e) => { e.stopPropagation(); selectCell(type, index, pos); };
-            return btn;
-        }
-
-        function updateDigitHelper() {
-            if (!activeCell) {
-                digitHelper.innerHTML = '<span>👈️ こっちが「一のくらい」だよ</span>';
-                return;
-            }
-
-            if (activeCell.type === 'carry') {
-                let colFromRight = gridSize - 1 - activeCell.col;
-                let place = "一";
-                if (colFromRight === 1) place = "十";
-                if (colFromRight === 2) place = "百";
-                if (colFromRight === 3) place = "千";
-                digitHelper.innerHTML = `<span class="font-bold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200">いま選んでいる場所：【${place}のくらい】の くり上がりメモ</span>`;
-                return;
-            }
-
-            if (activeCell.type === 'grid') {
-                const col = activeCell.col;
-                const diff = gridSize - 1 - col;
-                let label = "一のくらい";
-                if (diff === 1) label = "十のくらい";
-                if (diff === 2) label = "百のくらい";
-                if (diff === 3) label = "千のくらい";
-                digitHelper.innerHTML = `<span class="font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-lg border border-indigo-200">いま選んでいる場所：${label}</span>`;
-            }
-        }
-
-        function selectCell(type, r, c) {
-            if (interactionMode === 'draw') return;
-            activeCell = { type, row: r, col: c };
-            playSound('tap');
-            updateKeyboardLabel();
-            renderGrid();
-            updateDigitHelper();
-        }
-
-        function updateKeyboardLabel() {
-            if (!activeCell) {
-                keyboardTargetLabel.innerText = "ますめをえらんで入力してね";
-                return;
-            }
-
-            if (activeCell.type === 'carry') {
-                let colFromRight = gridSize - 1 - activeCell.col;
-                let place = "一";
-                if (colFromRight === 1) place = "十";
-                if (colFromRight === 2) place = "百";
-                if (colFromRight === 3) place = "千";
-                keyboardTargetLabel.innerText = `✏️ 【${place}のくらい】のくり上がりを入力中`;
-                return;
-            }
-
-            if (currentOperator === '÷') {
-                let typeLabel = "わり算";
-                if (activeCell.type === 'quotient') typeLabel = "商（答え）";
-                if (activeCell.type === 'divisor') typeLabel = "わる数（左側）";
-                if (activeCell.type === 'dividend') typeLabel = "わられる数（右側）";
-                keyboardTargetLabel.innerText = `⌨️ ${typeLabel}を入力中`;
-            } else {
-                let colFromRight = gridSize - 1 - activeCell.col;
-                let place = "一";
-                if (colFromRight === 1) place = "十";
-                if (colFromRight === 2) place = "百";
-                keyboardTargetLabel.innerText = `⌨️ 【${place}のくらい】に入力中`;
-            }
-        }
-
-        function pressKey(key) {
-            if (!activeCell || interactionMode === 'draw') return;
-
-            let value = (key !== 'clear' && key !== 'backspace' && key !== 'next') ? key : '';
-
-            if (activeCell.type === 'carry') {
-                const c = activeCell.col;
-                carryData[c] = (key === 'clear' || key === 'backspace') ? '' : value;
-            } else if (activeCell.type === 'grid') {
-                const r = activeCell.row;
-                const c = activeCell.col;
-                gridData[r][c] = (key === 'clear' || key === 'backspace') ? '' : value;
-            } else {
-                const r = activeCell.row;
-                const c = activeCell.col;
-                const type = activeCell.type;
-                let finalVal = (key === 'clear' || key === 'backspace') ? '' : value;
-                
-                if (type === 'quotient') divisionData.quotient[c] = finalVal;
-                else if (type === 'divisor') divisionData.divisor[c] = finalVal;
-                else if (type === 'dividend') divisionData.dividend[c] = finalVal;
-                else if (type.startsWith('step-sub-')) divisionData.steps[r].sub[c] = finalVal;
-                else if (type.startsWith('step-rem-')) divisionData.steps[r].rem[c] = finalVal;
-            }
-
-            playSound('tap');
-            renderGrid();
-
-            if (key !== 'clear' && key !== 'backspace' && key !== 'next') {
-                autoMoveNext();
-            } else if (key === 'next') {
-                autoMoveNext();
-            }
-        }
-
-        // 物理キーボードとの連動ロジック
-        function handlePhysicalKeyboard(e) {
-            if (interactionMode === 'draw' || !activeCell) return;
-
-            // チャットの入力欄にフォーカスがある場合はキーボードショートカットを無効化
-            if (document.activeElement.id === 'chat-input') return;
-
-            if (e.key >= '0' && e.key <= '9') {
-                e.preventDefault();
-                pressKey(e.key);
-            } else if (e.key === '.') {
-                e.preventDefault();
-                pressKey('.');
-            } else if (e.key === 'Backspace') {
-                e.preventDefault();
-                pressKey('backspace');
-            } else if (e.key === 'Delete') {
-                e.preventDefault();
-                pressKey('clear');
-            } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                moveSelection('left');
-            } else if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                moveSelection('right');
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                moveSelection('up');
-            } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                moveSelection('down');
-            } else if (e.key === 'Enter') {
-                e.preventDefault();
-                autoMoveNext();
-            }
-        }
-
-        function autoMoveNext() {
-            if (!activeCell) return;
-            if (currentOperator === '÷') {
-                let type = activeCell.type;
-                let r = activeCell.row;
-                let c = activeCell.col;
-
-                if (type === 'divisor' && c < 1) selectCell('divisor', 0, c + 1);
-                else if (type === 'divisor' && c === 1) selectCell('dividend', 0, 0);
-                else if (type === 'dividend' && c < 2) selectCell('dividend', 0, c + 1);
-                else if (type === 'dividend' && c === 2) selectCell('quotient', 0, 0);
-                else if (type === 'quotient' && c < 2) selectCell('quotient', 0, c + 1);
-            } else {
-                let r = activeCell.row;
-                let c = activeCell.col;
-
-                if (activeCell.type === 'carry') {
-                    if (c > 0) selectCell('grid', 0, c - 1);
-                } else if (r === gridSize - 1) {
-                    if (c > 0) selectCell('grid', r, c - 1);
-                } else {
-                    if (c < gridSize - 1) selectCell('grid', r, c + 1);
-                    else if (r < gridSize - 2) selectCell('grid', r + 1, 0);
-                }
-            }
-        }
-
-        function moveSelection(direction) {
-            if (!activeCell || interactionMode === 'draw') return;
-            let r = activeCell.row;
-            let c = activeCell.col;
-
-            if (direction === 'left' && c > 0) selectCell(activeCell.type, r, c - 1);
-            else if (direction === 'right' && c < gridSize - 1) selectCell(activeCell.type, r, c + 1);
-            else if (direction === 'up' && r > 0) selectCell(activeCell.type, r - 1, c);
-            else if (direction === 'down' && r < gridSize - 1) selectCell(activeCell.type, r + 1, c);
-        }
-
-        function checkCookieConsent() {
-            const consent = localStorage.getItem('cookie_consent_zgls');
-            if (!consent) {
-                setTimeout(() => {
-                    const banner = document.getElementById('cookie-banner');
-                    banner.classList.remove('translate-y-20', 'opacity-0');
-                    banner.classList.add('translate-y-0', 'opacity-100');
-                }, 1000);
-            }
-        }
-
-        function acceptCookies() {
-            localStorage.setItem('cookie_consent_zgls', 'true');
-            const banner = document.getElementById('cookie-banner');
-            banner.classList.add('translate-y-20', 'opacity-0');
-            banner.classList.remove('translate-y-0', 'opacity-100');
-            playSound('correct');
-        }
-
-        function toggleApiModal(show) {
-            const modal = document.getElementById('api-modal');
-            const input = document.getElementById('api-key-input');
-            if (show) {
-                modal.classList.remove('hidden');
-                input.value = localStorage.getItem('zaqless_api_key') || '';
-            } else {
-                modal.classList.add('hidden');
-            }
-            playSound('tap');
-        }
-
-        function saveApiKey() {
-            const input = document.getElementById('api-key-input').value.trim();
-            localStorage.setItem('zaqless_api_key', input);
-            toggleApiModal(false);
-            checkApiKeyOnLoad();
-            playSound('correct');
-        }
-
-        function checkApiKeyOnLoad() {
-            const key = localStorage.getItem('zaqless_api_key');
-            const statusText = document.getElementById('api-status-text');
-            const statusBtn = document.getElementById('api-status-btn');
-            if (key) {
-                statusText.innerText = "AI有効";
-                statusBtn.className = "flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-[10px] font-bold border-2 border-emerald-300";
-            } else {
-                statusText.innerText = "AI未設定";
-                statusBtn.className = "flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-bold border-2 border-rose-200";
-            }
-        }
-
-        let chatHistory = [];
-
-        async function sendQuickReport(reportText) {
-            addChatMessage('user', `手元の紙に「${reportText}」って落書きしたよ！`);
-            playSound('tap');
-            await callGeminiAI(reportText);
-        }
-
-        async function sendCustomMessage() {
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if (!text) return;
-            addChatMessage('user', text);
-            input.value = '';
-            playSound('tap');
-            await callGeminiAI(text);
-        }
-
-        function addChatMessage(role, text) {
-            const container = document.getElementById('chat-messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = "flex gap-2 items-start text-[10px] animate-pulse";
-            
-            if (role === 'user') {
-                messageDiv.className = "flex gap-2 items-start text-[10px] justify-end";
-                messageDiv.innerHTML = `
-                    <div class="bg-indigo-600 text-white p-2.5 rounded-2xl rounded-tr-none leading-relaxed max-w-[85%] font-bold">
-                        ${text}
-                    </div>
-                    <div class="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center shrink-0">🧒</div>
-                `;
-            } else {
-                messageDiv.innerHTML = `
-                    <div class="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center shrink-0 text-[9px]">🤖</div>
+            chatHistory = [];
+            document.getElementById('chat-messages').innerHTML = `
+                <div class="flex gap-2 items-start text-[10px]">
+                    <div class="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center shrink-0">🤖</div>
                     <div class="bg-indigo-50 p-2.5 rounded-2xl rounded-tl-none text-indigo-900 leading-relaxed max-w-[85%] font-medium">
-                        ${text}
+                        こんにちは！ZaqLessへようこそ！<br>
+                        問題は「もんだいを作る！」から自動で作れるよ。計算メモは手元のいらない紙に自由に書いてね！<br>
+                        <span class="text-indigo-600 font-bold">紙にメモを書いたら、下のボタンから教えてね！</span>
                     </div>
-                `;
-            }
-            container.appendChild(messageDiv);
-            container.scrollTop = container.scrollHeight;
-            messageDiv.classList.remove('animate-pulse');
+                </div>
+            `;
+            generateRandomProblem();
         }
 
-        // 年齢（学年）に合わせた指導プロンプトの動的生成
         async function callGeminiAI(userInput) {
             const apiKey = localStorage.getItem('zaqless_api_key');
             if (!apiKey) {
                 setTimeout(() => {
-                    addChatMessage('bot', `おっと、Gemini APIキーが設定されていないみたい！画面上の「AI未設定」ボタンをお父さん・お母さんにタップしてもらって、無料枠キーをセットしてみてね。どうしても設定方法がわからない場合は有人チャットスタッフがサポートします！`);
+                    removeLoading();
+                    addChatMessage('bot', `おっと、Gemini APIキーが設定されていないみたい！画面上の「AI未設定」ボタンをお父さん・お母さんにタップしてもらって、無料枠キーをセットしてみてね。簡単に使えるようになるよ！`);
                     playSound('incorrect');
                 }, 800);
                 return;
             }
 
-            // ローディング
+            // ローディングインジケーター表示
             const container = document.getElementById('chat-messages');
             const loadingDiv = document.createElement('div');
             loadingDiv.id = "chat-loading";
@@ -2668,88 +1578,100 @@
             container.appendChild(loadingDiv);
             container.scrollTop = container.scrollHeight;
 
-            // 子どもの学年に応じた漢字使用量、解説スタイルの変更
             const gradeLabels = ["小学1年", "小学2年", "小学3年", "小学4年", "小学5年以上"];
             const selectedGradeLabel = gradeLabels[currentGrade - 1];
 
-            const systemPrompt = `
-あなたは算数ハイブリッド学習「ZaqLess（ザクレス）」のサポートAI「Gemini先生」です。
-ユーザーは【${selectedGradeLabel}】の小学生です。
-現在、ユーザーは画面上の問題を解いており、演算子は【${currentOperator}】です。
-途中計算やくり上がり・くり下がりのメモは、手元の「いらない紙（チラシの裏など）」にえんぴつで落書きしながら取り組んでいます。
+            // AIに教える現在のグリッドコンテキスト
+            let gridStateText = "";
+            if (currentOperator === '÷') {
+                gridStateText = `
+                【わり算筆算状況】
+                わられる数: ${divisionData.dividend.join('')}
+                わる数: ${divisionData.divisor.join('')}
+                入力された商: ${divisionData.quotient.join('')}
+                途中計算ステップ: ${JSON.stringify(divisionData.steps)}
+                `;
+            } else {
+                gridStateText = `
+                【標準筆算状況】
+                演算子: ${currentOperator}
+                上の数: ${currentNum1Str}
+                下の数: ${currentNum2Str}
+                入力されたくり上がり行: ${carryData.join(', ')}
+                ユーザーが入力した解答行: ${gridData[gridSize-1] ? gridData[gridSize-1].join('') : ''}
+                `;
+            }
 
-【あなたの役割】
-- ユーザーの年齢（学年：${selectedGradeLabel}）に適した、ひらがな多めの分かりやすい言葉遣い（特に小1〜2年は基本ひらがなで、小3〜4年は簡単な漢字を交えて）で語りかけてください。
-- 子どもが手元の紙に「10を借りた」「小さく1と書いた」「あまりを下に下ろした」などの落書き報告をしたとき、その行動を大げさに、最高のテンションで褒めてあげてください。（例：「紙に書くって最高！天才だよ！」「えんぴつの摩擦が脳に効いてるね！」）
-- 筆算のルールについて、答えを一発で教えるのではなく、一歩一歩「次はどこを計算するかな？」と対話で優しく引き出してください。
-- 1行〜3行程度の短い、親しみやすい文体で答えてください。
+            // 指導用のシステムプロンプト
+            const systemPrompt = `
+あなたは小学生に優しく寄り添うおしゃべり数学バディ「Gemini先生」です。
+ユーザー（小学生）はスマホで「ZaqLess（ザクレス）」という筆算シートを使いながら、
+実際の「手元にあるいらない紙や自由帳」に落書きのように計算プロセス（くり下がりの斜め線、10の繰り下がり、繰り上がり、あまりの下ろしなど）を手書きしています。
+
+【あなたの役割・トーン】
+- ユーザーの学年は「${selectedGradeLabel}」です。学年に合わせて漢字の量を調整し、平仮名を多めに使ってください（特に小学1年・2年の場合は、ほとんどひらがなで優しく話してください）。
+- 自信をなくさせないよう、絶対に怒ったり冷たく指摘したりせず、たくさん褒めてあげてください。
+- 直接的な「答え」をすぐに教えるのではなく、「一の位のたし算はできたかな？」「10を借りてくるのを忘れていないかな？」のように、紙への落書き・計算を促すようなステップバイステップの優しいガイドをしてください。
+- ユーザーが「紙にこんな落書き（繰り下がり・繰り上がり・あまり下ろしなど）をしたよ」と報告してきたら、「すごい！ちゃんと工夫して書けてるね！」「紙に書くと間違えにくくなるよね、ナイス！」と大絶賛してください。
+
+現在のワークスペースの状況:
+${gridStateText}
+正しい最終答え: ${currentOperator === '÷' ? Math.floor(parseFloat(currentNum1Str) / parseFloat(currentNum2Str)) : (currentOperator === '+' ? (parseFloat(currentNum1Str)+parseFloat(currentNum2Str)) : (currentOperator === '-' ? (parseFloat(currentNum1Str)-parseFloat(currentNum2Str)) : (parseFloat(currentNum1Str)*parseFloat(currentNum2Str))))}
 `;
 
-            try {
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-                
-                chatHistory.push({ role: "user", parts: [{ text: userInput }] });
-                
-                const payload = {
-                    contents: chatHistory.map(h => ({
-                        role: h.role,
-                        parts: h.parts
-                    })),
-                    systemInstruction: {
-                        parts: [{ text: systemPrompt }]
-                    }
-                };
-
-                let response = null;
-                let delay = 1000;
-                for (let i = 0; i < 3; i++) {
-                    try {
-                        response = await fetch(apiUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-                        if (response.ok) break;
-                    } catch (e) {
-                        if (i === 2) throw e;
-                    }
-                    await new Promise(r => setTimeout(r, delay));
-                    delay *= 2; 
+            // 指数バックオフを用いたAPIリクエスト送信
+            const payload = {
+                contents: [
+                    ...chatHistory,
+                    { role: "user", parts: [{ text: userInput }] }
+                ],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
                 }
+            };
 
-                const result = await response.json();
-                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
-                const loader = document.getElementById('chat-loading');
-                if (loader) loader.remove();
+            let success = false;
+            let attempt = 0;
+            let delay = 1000;
+            let responseText = "";
 
-                if (text) {
-                    addChatMessage('bot', text);
-                    chatHistory.push({ role: "model", parts: [{ text: text }] });
-                    playSound('correct');
-                } else {
-                    addChatMessage('bot', "ごめんね、ちょっと電波がうまくいかなかったみたい。もう一回、紙に書いたことを教えてくれる？");
-                    playSound('incorrect');
+            while (!success && attempt < 5) {
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        responseText = result.candidates?.[0]?.content?.parts?.[0]?.text || "うーん、うまくお返事できなかったみたい。もういちどお話ししてみてね！";
+                        success = true;
+                    } else {
+                        throw new Error(`HTTP Error: ${response.status}`);
+                    }
+                } catch (err) {
+                    attempt++;
+                    if (attempt >= 5) {
+                        responseText = "通信エラーがおきてしまいました。APIキーが正しいか確認するか、すこし時間を空けてからもう一回お話ししてみてね。";
+                    } else {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2; // 指数バックオフ
+                    }
                 }
-
-            } catch (err) {
-                const loader = document.getElementById('chat-loading');
-                if (loader) loader.remove();
-                addChatMessage('bot', "通信（つうしん）がうまくいかなかったみたい。APIキーが正しいかお父さん・お母さんに確認してみてね。");
-                playSound('incorrect');
             }
+
+            removeLoading();
+            addChatMessage('bot', responseText);
+            playSound('correct');
         }
 
-        // ひっ算のリセットボタンアクション
-        document.getElementById('btn-reset').onclick = function() {
-            generateRandomProblem();
-        };
-    </script>
-</body>
-</html>トボタンアクション
-        document.getElementById('btn-reset').onclick = function() {
-            generateRandomProblem();
-        };
+        function removeLoading() {
+            const loader = document.getElementById('chat-loading');
+            if (loader) loader.remove();
+        }
     </script>
 </body>
 </html>
