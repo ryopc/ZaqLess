@@ -71,7 +71,6 @@
 </head>
 <body class="bg-indigo-50/20 text-slate-800 min-h-screen flex flex-col justify-between overflow-x-hidden pb-4">
 
-
     <!-- APIキー設定ダイアログ (BYOK) -->
     <div id="api-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border-2 border-indigo-100 flex flex-col gap-4">
@@ -86,7 +85,7 @@
             </div>
             
             <p class="text-xs text-slate-500 leading-relaxed">
-                ZaqLessでは、1対1 of AI学習指導を誰もが無料で使えるように、おうちの「無料枠Gemini APIキー」を利用する仕組みを採用しています。設定はとても簡単です！
+                ZaqLessでは、1対1のAI学習指導を誰もが無料で使えるように、おうちの「無料枠Gemini APIキー」を利用する仕組みを採用しています。設定はとても簡単です！
             </p>
 
             <div class="flex flex-col gap-1">
@@ -215,7 +214,7 @@
     <!-- メインワークスペース -->
     <main class="flex-1 w-full max-w-7xl mx-auto px-4 py-4 flex flex-col xl:flex-row gap-4 items-stretch justify-center h-auto xl:h-[calc(100vh-140px)]">
         
-        <!-- 左側：ひっ算ツールボード (横幅を少し広く) -->
+        <!-- 左側：ひっ算ツールボード -->
         <div class="flex-1 flex flex-col gap-3 min-w-0 h-full">
             <!-- 相互作用モード & 問題自動生成 -->
             <div class="flex flex-col sm:flex-row gap-2 shrink-0">
@@ -297,7 +296,7 @@
                         <i data-lucide="pencil" class="w-3 h-3"></i>
                         <span>ペン</span>
                     </button>
-                    <button id="tool-eraser" onclick="setDrawTool('eraser')" class="p-2 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md hover:bg-slate-200">
+                    <button id="tool-eraser" onclick="setDrawTool('eraser')" class="p-2 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-md">
                         <i data-lucide="eraser" class="w-3 h-3"></i>
                         <span>消しゴム</span>
                     </button>
@@ -351,7 +350,7 @@
             </div>
         </div>
 
-        <!-- 横隣に配置された ソフトウェアキーボード (PC時：ひっ算の右横に合体) -->
+        <!-- 横隣に配置された ソフトウェアキーボード -->
         <div id="keyboard-footer" class="w-full xl:w-[280px] bg-slate-100 border border-slate-300 p-3 rounded-3xl transition-all shrink-0 flex flex-col gap-2 justify-center h-full">
             <div class="flex flex-col gap-2">
                 <!-- キーボード上部のアクション -->
@@ -408,7 +407,7 @@
 
     </main>
 
-    <!-- 🤖 右下：AIおしゃべりバディ「Gemini先生」フローティングシステム -->
+    <!-- AIおしゃべりバディ「Gemini先生」フローティングシステム -->
     <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
         
         <!-- チャットポップアップ窓 -->
@@ -435,7 +434,7 @@
                 </div>
             </div>
 
-            <!-- チャット履歴エリア (高さを大きく) -->
+            <!-- チャット履歴エリア -->
             <div id="chat-messages" class="flex-1 overflow-y-auto py-3 flex flex-col gap-3 no-scrollbar max-h-full">
                 <!-- 初期メッセージ -->
                 <div class="flex gap-2 items-start text-[10px]">
@@ -478,7 +477,7 @@
 
         <!-- 丸いロボット型チャットバブル (フローティングボタン) -->
         <div class="flex items-center gap-2">
-            <!-- 吹き出しヒント (最初期に気づきやすくするための演出) -->
+            <!-- 吹き出しヒント -->
             <div id="ai-hint-bubble" class="bg-indigo-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-2xl shadow-lg border-2 border-indigo-500 relative flex items-center gap-1 animate-bounce">
                 <span>しつもんはこちら！</span>
                 <div class="absolute right-[-6px] top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[6px] border-l-indigo-600"></div>
@@ -486,7 +485,6 @@
 
             <button onclick="toggleChatPopup()" id="chat-bubble-btn" class="w-14 h-14 bg-gradient-to-tr from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 active:scale-90 text-white rounded-full flex items-center justify-center shadow-2xl border-4 border-white transition-all duration-200 relative group">
                 <span class="text-2xl group-hover:animate-wiggle">🤖</span>
-                <!-- 通知バッジ風（AI有効時にピカピカ光る） -->
                 <span id="ai-badge" class="absolute top-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></span>
             </button>
         </div>
@@ -546,7 +544,6 @@
             initGrid();
             renderGrid();
             initCanvas();
-            checkCookieConsent();
             checkApiKeyOnLoad();
             generateRandomProblem();
 
@@ -704,8 +701,11 @@
             if (mode === 'draw') {
                 modeDrawBtn.className = "py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border-2 border-indigo-600 bg-indigo-50 text-indigo-700";
                 modeInputBtn.className = "py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border-2 border-transparent bg-slate-50 text-slate-500";
+                
+                // キャンバスをインタラクティブにし、最前面に表示
                 canvas.classList.remove('pointer-events-none', 'opacity-0');
                 canvas.classList.add('pointer-events-auto', 'opacity-100');
+                
                 drawTools.classList.remove('hidden');
                 guideMessageText.innerText = "✏️ メモ落書き：指やペンで、くり下がりの斜め線や途中計算を自由に書けるよ！";
                 topGuideText.className = "absolute top-2 left-3 flex items-center gap-1 text-[10px] text-amber-700 z-50 font-bold";
@@ -715,8 +715,11 @@
             } else {
                 modeInputBtn.className = "py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border-2 border-indigo-600 bg-indigo-50 text-indigo-700";
                 modeDrawBtn.className = "py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border-2 border-transparent bg-slate-50 text-slate-500";
+                
+                // キャンバスへのイベント干渉を無くすため pointer-events-none に設定（非常に重要）
                 canvas.classList.add('pointer-events-none', 'opacity-0');
                 canvas.classList.remove('pointer-events-auto', 'opacity-100');
+                
                 drawTools.classList.add('hidden');
                 guideMessageText.innerText = "青いマスをえらんで、横のキーボードで数字を入れてね";
                 topGuideText.className = "absolute top-2 left-3 flex items-center gap-1 text-[10px] text-slate-400 z-10 font-bold";
@@ -1263,7 +1266,7 @@
 
         function handlePhysicalKeyboard(e) {
             if (interactionMode === 'draw' || !activeCell) return;
-            if (document.activeElement.id === 'chat-input') return;
+            if (document.activeElement && document.activeElement.id === 'chat-input') return;
 
             if (e.key >= '0' && e.key <= '9') {
                 e.preventDefault();
@@ -1426,31 +1429,12 @@
             addChatMessage('bot', `お助けボタンだね！答えは「${ansStr}」だよ。どうしてその計算になるか、ひっ算のやり方を一緒にみてみよう！`);
         }
 
-        function checkCookieConsent() {
-            const consent = localStorage.getItem('cookie_consent_zgls');
-            if (!consent) {
-                setTimeout(() => {
-                    const banner = document.getElementById('cookie-banner');
-                    banner.classList.remove('translate-y-20', 'opacity-0');
-                    banner.classList.add('translate-y-0', 'opacity-100');
-                }, 1000);
-            }
-        }
-
-        function acceptCookies() {
-            localStorage.setItem('cookie_consent_zgls', 'true');
-            const banner = document.getElementById('cookie-banner');
-            banner.classList.add('translate-y-20', 'opacity-0');
-            banner.classList.remove('translate-y-0', 'opacity-100');
-            playSound('correct');
-        }
-
         function toggleApiModal(show) {
             const modal = document.getElementById('api-modal');
             const input = document.getElementById('api-key-input');
             if (show) {
                 modal.classList.remove('hidden');
-                input.value = localStorage.getItem('zaqless_api_key') || '';
+                if (input) input.value = localStorage.getItem('zaqless_api_key') || '';
             } else {
                 modal.classList.add('hidden');
             }
@@ -1458,7 +1442,8 @@
         }
 
         function saveApiKey() {
-            const input = document.getElementById('api-key-input').value.trim();
+            const inputEl = document.getElementById('api-key-input');
+            const input = inputEl ? inputEl.value.trim() : '';
             localStorage.setItem('zaqless_api_key', input);
             toggleApiModal(false);
             checkApiKeyOnLoad();
@@ -1471,12 +1456,12 @@
             const statusBtn = document.getElementById('api-status-btn');
             const aiBadge = document.getElementById('ai-badge');
             if (key) {
-                statusText.innerText = "AI有効";
-                statusBtn.className = "flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-[10px] font-bold border-2 border-emerald-300";
+                if (statusText) statusText.innerText = "AI有効";
+                if (statusBtn) statusBtn.className = "flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-[10px] font-bold border-2 border-emerald-300";
                 if (aiBadge) aiBadge.className = "absolute top-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse";
             } else {
-                statusText.innerText = "AI未設定";
-                statusBtn.className = "flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-bold border-2 border-rose-200";
+                if (statusText) statusText.innerText = "AI未設定";
+                if (statusBtn) statusBtn.className = "flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-bold border-2 border-rose-200";
                 if (aiBadge) aiBadge.className = "absolute top-0 right-0 w-4 h-4 bg-rose-500 rounded-full border-2 border-white animate-pulse";
             }
         }
@@ -1491,16 +1476,18 @@
 
         async function sendCustomMessage() {
             const input = document.getElementById('chat-input');
-            const text = input.value.trim();
+            const text = input ? input.value.trim() : '';
             if (!text) return;
             addChatMessage('user', text);
-            input.value = '';
+            if (input) input.value = '';
             playSound('tap');
             await callGeminiAI(text);
         }
 
         function addChatMessage(role, text) {
             const container = document.getElementById('chat-messages');
+            if (!container) return;
+            
             const messageDiv = document.createElement('div');
             messageDiv.className = "flex gap-2 items-start text-[10px]";
             
@@ -1539,16 +1526,19 @@
             initGrid();
             clearCanvas();
             chatHistory = [];
-            document.getElementById('chat-messages').innerHTML = `
-                <div class="flex gap-2 items-start text-[10px]">
-                    <div class="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center shrink-0">🤖</div>
-                    <div class="bg-indigo-50 p-2.5 rounded-2xl rounded-tl-none text-indigo-900 leading-relaxed max-w-[85%] font-medium">
-                        こんにちは！ZaqLessへようこそ！<br>
-                        問題は「もんだいを作る！」から自動で作れるよ。計算メモは手元のいらない紙に自由に書いてね！<br>
-                        <span class="text-indigo-600 font-bold">紙にメモを書いたら、下のボタンから教えてね！</span>
+            const chatMessages = document.getElementById('chat-messages');
+            if (chatMessages) {
+                chatMessages.innerHTML = `
+                    <div class="flex gap-2 items-start text-[10px]">
+                        <div class="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center shrink-0">🤖</div>
+                        <div class="bg-indigo-50 p-2.5 rounded-2xl rounded-tl-none text-indigo-900 leading-relaxed max-w-[85%] font-medium">
+                            こんにちは！ZaqLessへようこそ！<br>
+                            問題は「もんだいを作る！」から自動で作れるよ。計算メモは手元のいらない紙に自由に書いてね！<br>
+                            <span class="text-indigo-600 font-bold">紙にメモを書いたら、下のボタンから教えてね！</span>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
             generateRandomProblem();
         }
 
@@ -1565,6 +1555,8 @@
 
             // ローディングインジケーター表示
             const container = document.getElementById('chat-messages');
+            if (!container) return;
+
             const loadingDiv = document.createElement('div');
             loadingDiv.id = "chat-loading";
             loadingDiv.className = "flex gap-2 items-start text-[10px]";
@@ -1619,7 +1611,10 @@ ${gridStateText}
 正しい最終答え: ${currentOperator === '÷' ? Math.floor(parseFloat(currentNum1Str) / parseFloat(currentNum2Str)) : (currentOperator === '+' ? (parseFloat(currentNum1Str)+parseFloat(currentNum2Str)) : (currentOperator === '-' ? (parseFloat(currentNum1Str)-parseFloat(currentNum2Str)) : (parseFloat(currentNum1Str)*parseFloat(currentNum2Str))))}
 `;
 
-            // 指数バックオフを用いたAPIリクエスト送信
+            // 有効なモデル名 (gemini-2.5-flash-preview-09-2025) に修正
+            const modelName = 'gemini-2.5-flash-preview-09-2025';
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
             const payload = {
                 contents: [
                     ...chatHistory,
@@ -1629,8 +1624,6 @@ ${gridStateText}
                     parts: [{ text: systemPrompt }]
                 }
             };
-
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash?key=${apiKey}`;
 
             let success = false;
             let attempt = 0;
@@ -1655,7 +1648,7 @@ ${gridStateText}
                 } catch (err) {
                     attempt++;
                     if (attempt >= 5) {
-                        responseText = "通信エラーがおきてしまいました。APIキーが正しいか確認するか、すこし時間を空けてからもう一回お話ししてみてね。";
+                        responseText = "通信エラーがおきてしまいました。APIキーが正しいか確認するか、お父さん・お母さんにもう一度APIキーをセットしてもらってね！";
                     } else {
                         await new Promise(resolve => setTimeout(resolve, delay));
                         delay *= 2; // 指数バックオフ
